@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useUser } from '../contexts/UserContext'
 import Calculator from './apps/Calculator'
 import Notepad from './apps/Notepad'
@@ -6,20 +6,22 @@ import FileExplorer from './apps/FileExplorer'
 import Settings from './apps/Settings'
 import Browser from './apps/Browser'
 import Todo from './apps/Todo'
-import Clock from './apps/Clock'
 import Paint from './apps/Paint'
 import Terminal from './apps/Terminal'
+import Profile from './apps/Profile'
+
 const APPS = [
+  { id: 'profile', name: 'Profile', icon: 'https://img.icons8.com/?id=kDoeg22e5jUY&format=png', component: Profile },
+  { id: 'browser', name: 'Chrome', icon: 'https://img.icons8.com/fluency/48/chrome.png', component: Browser },
+  { id: 'terminal', name: 'Terminal', icon: 'https://img.icons8.com/fluency/48/console.png', component: Terminal },
   { id: 'calculator', name: 'Calculator', icon: 'https://img.icons8.com/fluency/48/calculator.png', component: Calculator },
   { id: 'notepad', name: 'Notepad', icon: 'https://img.icons8.com/fluency/48/notepad.png', component: Notepad },
   { id: 'explorer', name: 'File Explorer', icon: 'https://img.icons8.com/fluency/48/folder-invoices.png', component: FileExplorer },
   { id: 'settings', name: 'Settings', icon: 'https://img.icons8.com/fluency/48/settings.png', component: Settings },
-  { id: 'browser', name: 'Chrome', icon: 'https://img.icons8.com/fluency/48/chrome.png', component: Browser },
   { id: 'todo', name: 'Todo List', icon: 'https://img.icons8.com/fluency/48/checkmark.png', component: Todo },
-  { id: 'clock', name: 'Clock', icon: 'https://img.icons8.com/fluency/48/alarm-clock.png', component: Clock },
   { id: 'paint', name: 'Paint', icon: 'https://img.icons8.com/fluency/48/microsoft-paint.png', component: Paint },
-  { id: 'terminal', name: 'Terminal', icon: 'https://img.icons8.com/fluency/48/console.png', component: Terminal },
 ]
+
 export default function StartMenu({ isOpen, onToggle, onAppClick, onLock }) {
   const { user } = useUser()
   const [search, setSearch] = useState('')
@@ -58,13 +60,7 @@ export default function StartMenu({ isOpen, onToggle, onAppClick, onLock }) {
           </div>
         </div>
         <div className="start-section-header">
-          <span className="start-section-title">Pinned</span>
-          <button className="start-section-btn">
-            All apps
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px' }}>
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
+          <span className="start-section-title">Apps</span>
         </div>
         <div className="start-apps">
           {filteredApps.length > 0 ? filteredApps.map(app => {

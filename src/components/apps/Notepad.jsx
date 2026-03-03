@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react'
+﻿import { useState, useRef } from 'react'
 export default function Notepad() {
   const [content, setContent] = useState('')
   const [fontSize, setFontSize] = useState(14)

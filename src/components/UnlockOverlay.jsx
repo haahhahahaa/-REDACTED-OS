@@ -5,7 +5,6 @@ export default function UnlockOverlay({ onUnlock, onCancel }) {
   const { user } = useUser()
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
-  const [shake, setShake] = useState(false)
   const [loading, setLoading] = useState(false)
   const inputRef = useRef(null)
   useEffect(() => {
@@ -15,17 +14,12 @@ export default function UnlockOverlay({ onUnlock, onCancel }) {
   const handleSubmit = (e) => {
     e?.preventDefault()
     if (loading) return
-    if (pin === '' || pin === '1234') {
+    if (pin === '6776') {
       setLoading(true)
       setTimeout(onUnlock, 400)
     } else {
-      setError('The PIN is incorrect. Please try again.')
-      setShake(true)
-      setPin('')
-      setTimeout(() => {
-        setShake(false)
-        inputRef.current?.focus()
-      }, 600)
+      setError('The PIN is incorrect. Hint: Logs.')
+      console.log('6776 idiot 😂🫵')
     }
   }
   const handleKeyDown = (e) => {
@@ -34,7 +28,7 @@ export default function UnlockOverlay({ onUnlock, onCancel }) {
   }
   return (
     <div className="unlock-overlay" onClick={(e) => e.stopPropagation()}>
-      <div className={`unlock-panel ${shake ? 'shake' : ''} ${loading ? 'loading' : ''}`}>
+      <div className={`unlock-panel ${loading ? 'loading' : ''}`}>
         {}
         <div className="ul-avatar-large">
           <img 

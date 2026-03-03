@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
-import { MdNotifications, MdSearch, MdWifi, MdVolumeUp, MdOutlineGridView, MdDashboard } from 'react-icons/md'
+import { MdWifi, MdVolumeUp } from 'react-icons/md'
 export default function Taskbar({
   onStartClick,
   onQuickSettingsClick,
   onCalendarClick,
-  onNotificationsClick,
-  onLock,
   windows,
   onWindowClick,
   focusedId,
@@ -13,29 +11,29 @@ export default function Taskbar({
   onTogglePin = () => {},
   onLaunchApp = () => {},
   onShowDesktop = () => {},
+  onReorderPinned = () => {},
 }) {
   const [battery, setBattery] = useState(null)
   const [time, setTime] = useState(new Date())
   const [wifiName, setWifiName] = useState('WiFi')
+  const [draggedApp, setDraggedApp] = useState(null)
 
   useEffect(() => {
     if ('connection' in navigator) {
        const conn = navigator.connection;
-       // The API doesn't provide SSID, but we can detect type
-       if(conn.type === 'wifi' || conn.effectiveType === '4g') {
-          setWifiName('Connected (WiFi)'); // Effective type 4g usually means good connection, often treated as wifi-like in desktop contexts if type is missing
+       if(conn.type === 'wifi') {
+          setWifiName('WiFi'); 
        } else if(conn.type === 'cellular') {
-          setWifiName('Connected (Cellular)');
+          setWifiName('Cellular');
        } else if (conn.type === 'ethernet') {
-          setWifiName('Connected (Ethernet)');
+          setWifiName('Ethernet');
        } else {
-         setWifiName('Network Connected');
+         setWifiName('Connected');
        }
        
        const updateConnection = () => {
           if(navigator.onLine) {
             setWifiName('Connected');
-            if (conn.type === 'wifi') setWifiName('Connected (WiFi)');
           } else {
             setWifiName('No Internet');
           }
@@ -126,6 +124,23 @@ export default function Taskbar({
                   }}
                   onContextMenu={(e) => handleContext(e, app)}
                   title={app.name}
+                  draggable
+                  onDragStart={() => setDraggedApp(app)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    if (draggedApp && draggedApp.id !== app.id) {
+                       const newPinned = [...pinnedApps]
+                       const fromIndex = newPinned.findIndex(p => p.id === draggedApp.id)
+                       const toIndex = newPinned.findIndex(p => p.id === app.id)
+                       if (fromIndex !== -1 && toIndex !== -1) {
+                         newPinned.splice(fromIndex, 1)
+                         newPinned.splice(toIndex, 0, draggedApp)
+                         onReorderPinned(newPinned)
+                       }
+                    }
+                    setDraggedApp(null)
+                  }}
                 >
                   <div className="taskbar-app-icon">
                     {app.icon ? <img src={app.icon} alt={app.name} /> : app.name[0]}
@@ -207,7 +222,9 @@ export default function Taskbar({
               : 'Pin to taskbar'}
           </div>
           <div className="ctx-divider" />
-          <div className="ctx-item" onClick={() => closeCtx()}>Close window</div>
+          {ctxMenu.win && windows.some(w => w.appId === ctxMenu.win.id || w.id === ctxMenu.win.id) && (
+            <div className="ctx-item" onClick={() => closeCtx()}>Close window</div>
+          )}
         </div>
       )}
     </>

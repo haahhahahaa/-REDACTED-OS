@@ -1,24 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MdKeyboardArrowUp, MdKeyboardArrowDown, MdNotificationsPaused, MdMoreHoriz, MdSettings } from 'react-icons/md';
 
 export default function CalendarPanel({ isOpen, onClose }) {
   const [date, setDate] = useState(new Date());
   const [notifications, setNotifications] = useState([
     {
-      id: 'edge-update',
-      app: 'Microsoft Edge',
-      icon: 'https://img.icons8.com/color/48/microsoft-edge.png',
+      id: 'notice',
+      app: 'Profile',
+      icon: 'https://img.icons8.com/?id=kDoeg22e5jUY&format=png',
       time: 'Now',
-      title: 'System Update Available',
-      subtitle: 'Restart your PC to apply the latest security updates.'
-    },
-    {
-      id: 'mail-report',
-      app: 'Mail',
-      icon: 'https://img.icons8.com/fluency/48/mail.png',
-      time: '2m',
-      title: 'Weekly Report',
-      subtitle: 'Here is the summary of your weekly activities...'
+      title: 'Notice',
+      subtitle: 'You might want to check out your profile.'
     }
   ]);
 
@@ -68,7 +60,6 @@ export default function CalendarPanel({ isOpen, onClose }) {
     calendarDays.push({ day: i, current: true, today: isToday });
   }
 
-  // Next month padding to fill 42 slots (6 weeks)
   const totalSlots = 42; 
   const nextPadding = totalSlots - calendarDays.length;
   for (let i = 1; i <= nextPadding; i++) {
@@ -83,7 +74,7 @@ export default function CalendarPanel({ isOpen, onClose }) {
         <div className="calendar-header-section">
           <div className="calendar-title">Notifications</div>
           <div className="calendar-notif-btns">
-            <button type="button" className="notif-btn" title="Focus Assist"><MdNotificationsPaused size={16} /></button>
+            {/* <button type="button" className="notif-btn" title="Focus Assist"><MdNotificationsPaused size={16} /></button> */}
             <button type="button" className="notif-btn clear-all" onClick={() => setNotifications([])}>Clear all</button>
           </div>
         </div>
@@ -111,18 +102,15 @@ export default function CalendarPanel({ isOpen, onClose }) {
 
         {/* Calendar Section */}
         <div className="calendar-section">
-          {/* Top Date Display (e.g. "Wednesday, February 26") */}
           <div className="calendar-month-header">
             <div className="month-display">
               {date.toLocaleString('default', { weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
             <div className="month-controls" onClick={() => setDate(new Date())} title="Go to today">
-               {/* Icon to collapse calendar could go here, or just empty space */}
             </div>
           </div>
 
           <div className="calendar-grid-container">
-            {/* Month Label with Arrows */}
             <div className="calendar-month-label">
               <span>{monthName} {currentYear}</span>
               <div className="month-arrows">

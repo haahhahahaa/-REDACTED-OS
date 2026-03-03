@@ -224,8 +224,6 @@ function Window({ window: win, onClose, onMinimize, onMaximize, onUpdatePos, onU
     }
 
     const handleMouseUpGlobal = () => {
-      // Must check hoverSnap from state ref if possible, but here we depend on closure
-      // Since this effect re-runs on hoverSnap change, hoverSnap is current!
       if (isDragging && hoverSnap) {
         applySnapLayout(hoverSnap)
       }

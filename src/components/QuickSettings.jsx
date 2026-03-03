@@ -22,11 +22,9 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
   
   const [wifiName, setWifiName] = useState('WiFi');
   const [batteryLevel, setBatteryLevel] = useState(null);
-
-  // Initialize battery on mount
+  const [nightLight, setNightLight] = useState(false);
   useEffect(() => {
-     if ('getBattery' in navigator) {
-        // @ts-ignore
+     if ('getBattery' in navigator) {   // Battery info
         navigator.getBattery().then(bat => {
             setBatteryLevel(Math.round(bat.level * 100));
             const updateBattery = () => setBatteryLevel(Math.round(bat.level * 100));
@@ -35,25 +33,21 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
         }).catch(err => console.error(err));
      }
   }, []);
-
   useEffect(() => {
-    if (!isOpen) return;
-
-    // WiFi Info
+    if (!isOpen) return;     // WiFi info, only wifi/cellular/ethernet
     if ('connection' in navigator) {
       const conn = navigator.connection;
       const updateWifi = () => {
          if (conn.type === 'wifi' || conn.effectiveType === '4g') {
-           setWifiName('Connected (WiFi)');
+           setWifiName('Wi-Fi');
          } else if (conn.type === 'cellular') {
-           setWifiName('Connected (Cellular)');
+           setWifiName('Cellular');
          } else if (conn.type === 'ethernet') {
-           setWifiName('Connected (Ethernet)');
+           setWifiName('Ethernet');
          } else {
            setWifiName(navigator.onLine ? 'Network Connected' : 'No Internet');
          }
       };
-      
       if (typeof navigator.connection.addEventListener === 'function') {
         navigator.connection.addEventListener('change', updateWifi);
       }
@@ -63,6 +57,12 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
          }
       }
     }
+    useEffect(() => {    // Night Light 
+      const filter = [];
+      if (brightness < 100) filter.push(`brightness(${brightness}%)`);
+      if (nightLight) filter.push('sepia(40%) hue-rotate(10deg) saturate(150%)');
+      document.body.style.filter = filter.join(' ') || 'none';
+    }, [brightness, nightLight]);
   }, [isOpen]);
 
 
@@ -76,7 +76,7 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
               <MdWifi size={20} />
               <div className="qs-split-icon"><MdKeyboardArrowRight size={16} /></div>
             </div>
-            <span className="qs-label">{wifi ? (wifiName === 'WiFi' ? 'Connected (WiFi)' : wifiName) : 'Wi-Fi'}</span>
+            <span className="qs-label">{wifi ? (wifiName === 'WiFi' ? 'WiFi' : wifiName) : 'Internet'}</span>
           </div>
           <div className={`qs-item ${bluetooth ? 'active' : ''}`} onClick={() => setBluetooth(!bluetooth)}>
             <div className="qs-icon-wrapper">
@@ -97,7 +97,7 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
             </div>
             <span className="qs-label">Battery saver</span>
           </div>
-          <div className="qs-item" onClick={() => {}}>
+          <div className={`qs-item ${nightLight ? 'active' : ''}`} onClick={() => setNightLight(!nightLight)}>
             <div className="qs-icon-wrapper">
               <MdNightlight size={20} />
             </div>
@@ -114,6 +114,8 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
           <div className="qs-slider-group">
             <MdWbSunny size={20} className="qs-slider-icon" />
             <div className="qs-slider-container">
+              <div className="qs-slider-track" />
+              <div className="qs-slider-fill" style={{ width: `${brightness}%` }} />
               <input 
                 type="range" 
                 min="0" 
@@ -121,13 +123,14 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
                 value={brightness} 
                 onChange={(e) => setBrightness(e.target.value)}
                 className="qs-slider"
-                style={{ '--progress': `${brightness}%` }}
               />
             </div>
           </div>
           <div className="qs-slider-group">
             <MdVolumeUp size={20} className="qs-slider-icon" />
             <div className="qs-slider-container">
+              <div className="qs-slider-track" />
+              <div className="qs-slider-fill" style={{ width: `${volume}%` }} />
               <input 
                 type="range" 
                 min="0" 
@@ -135,7 +138,6 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
                 value={volume} 
                 onChange={(e) => setVolume(e.target.value)}
                 className="qs-slider"
-                style={{ '--progress': `${volume}%` }}
               />
             </div>
           </div>

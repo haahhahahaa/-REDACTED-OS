@@ -11,7 +11,6 @@ import FileExplorer from './apps/FileExplorer'
 import Browser from './apps/Browser'
 import Todo from './apps/Todo'
 import Settings from './apps/Settings'
-import Clock from './apps/Clock'
 import Paint from './apps/Paint'
 import Terminal from './apps/Terminal'
 
@@ -24,7 +23,6 @@ const APP_CATALOG = [
   { id: 'notepad', name: 'Notepad', icon: 'https://img.icons8.com/fluency/48/notepad.png', component: Notepad },
   { id: 'calculator', name: 'Calculator', icon: 'https://img.icons8.com/fluency/48/calculator.png', component: Calculator },
   { id: 'todo', name: 'Todo List', icon: 'https://img.icons8.com/fluency/48/checkmark.png', component: Todo },
-  { id: 'clock', name: 'Clock', icon: 'https://img.icons8.com/fluency/48/alarm-clock.png', component: Clock },
   { id: 'paint', name: 'Paint', icon: 'https://img.icons8.com/fluency/48/microsoft-paint.png', component: Paint },
   { id: 'terminal', name: 'Terminal', icon: 'https://img.icons8.com/fluency/48/console.png', component: Terminal },
 ]
@@ -194,6 +192,10 @@ export default function Desktop({ onLock }) {
     setFocusedId(null)
   }, [])
 
+  const handleReorderPinned = useCallback((newOrder) => {
+    setPinnedApps(newOrder)
+  }, [])
+
   const handleDesktopClick = () => {
     setStartMenuOpen(false)
     setCalendarOpen(false)
@@ -268,6 +270,7 @@ export default function Desktop({ onLock }) {
         onTogglePin={togglePin}
         onLaunchApp={(app) => openApp(app)}
         onShowDesktop={showDesktop}
+        onReorderPinned={handleReorderPinned}
       />
       <CalendarPanel
         isOpen={calendarOpen}

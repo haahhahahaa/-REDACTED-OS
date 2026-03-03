@@ -5,12 +5,6 @@ import Desktop from './components/Desktop'
 import './components/components.css'
 import { useUser } from './contexts/UserContext'
 
-/**
- * App state machine:
- *   locked   = lock screen visible, no input
- *   unlocking = lock screen shown with password panel
- *   desktop  = logged in
- */
 function App() {
   const [phase, setPhase] = useState('locked')
   const { currentColors } = useUser()
@@ -35,7 +29,7 @@ function App() {
         e.preventDefault()
         setPhase('unlocking')
       }
-      if (phase === 'unlocking' && e.code === 'Escape') {
+      if (phase === 'unlocking' && (e.code === 'Escape' || e.code === 'Space' || e.code === 'ArrowDown')) {
         setPhase('locked')
       }
     }

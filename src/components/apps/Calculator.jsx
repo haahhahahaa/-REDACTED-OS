@@ -4,6 +4,17 @@ export default function Calculator() {
   const [display, setDisplay] = useState('0')
   const [equation, setEquation] = useState('')
   const [shouldReset, setShouldReset] = useState(false)
+  const [memory, setMemory] = useState(null)
+  const handleMemory = (op) => {
+    const v = parseFloat(display) || 0
+    if (op === 'MC') setMemory(null)
+    else if (op === 'MR') {
+      if (memory !== null) { setDisplay(String(memory)); setShouldReset(true) }
+    } else setMemory(m => {
+      const cur = m ?? 0
+      return op === 'MS' ? v : op === 'M+' ? cur + v : cur - v
+    })
+  }
   const handleDigit = (digit) => {
     if (display === '0' || shouldReset) {
       setDisplay(digit)
@@ -20,7 +31,7 @@ export default function Calculator() {
     try {
       if (!equation) return
       const fullEq = equation + display
-      const mathEq = fullEq.replace('×', '*').replace('÷', '/').replace('−', '-')
+      const mathEq = fullEq.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-')
       const result = eval(mathEq)
       setDisplay(String(result))
       setEquation('')
@@ -41,11 +52,8 @@ export default function Calculator() {
   return (
     <div className="calc-container">
       <div className="calc-nav">
-        <MdMenu className="calc-nav-icon" />
         <span className="calc-mode">Standard</span>
         <div style={{ display: 'flex', gap: '4px' }}>
-          <MdFullscreenExit className="calc-nav-icon" style={{ rotate: '45deg' }} />
-          <MdHistory className="calc-nav-icon" />
         </div>
       </div>
       <div className="calc-display-section">
@@ -53,11 +61,9 @@ export default function Calculator() {
         <div className="calc-main-num">{display}</div>
       </div>
       <div className="calc-memory-row">
-        <button className="calc-mem-btn" disabled>MC</button>
-        <button className="calc-mem-btn" disabled>MR</button>
-        <button className="calc-mem-btn">M+</button>
-        <button className="calc-mem-btn">M-</button>
-        <button className="calc-mem-btn">MS</button>
+        {['MC', 'MR', 'M+', 'M-', 'MS'].map(op => (
+          <button key={op} className="calc-mem-btn" onClick={() => handleMemory(op)} disabled={['MC','MR'].includes(op) && memory === null}>{op}</button>
+        ))}
         <button className="calc-mem-btn" disabled>Mv</button>
       </div>
       <div className="calc-btn-grid">
@@ -90,4 +96,4 @@ export default function Calculator() {
       </div>
     </div>
   )
-}
+}

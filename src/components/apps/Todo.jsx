@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react'
+﻿import { useState } from 'react'
+
 export default function Todo() {
   const [todos, setTodos] = useState([
     { id: 1, text: 'Plan next project', completed: false },

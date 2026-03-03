@@ -216,9 +216,12 @@ export default function Settings() {
         }
         .settings-input:focus,
         .settings-select:focus {
-          border-color: var(--theme-accent-color);
-          box-shadow: 0 0 0 3px var(--theme-focus-ring);
+          border-color: var(--theme-card-bg);
           background: rgba(255,255,255,0.05);
+        }
+        .settings-select option {
+          background: rgb(var(--theme-window-color-rgb));
+          color: var(--theme-text-color);
         }
         .settings-btn {
           border: 1px solid var(--theme-border-color);
@@ -233,23 +236,19 @@ export default function Settings() {
           font-size: 14px;
         }
         .settings-btn:hover {
-          transform: translateY(-1px);
           border-color: rgba(var(--theme-accent-rgb), 0.5);
           background: rgba(var(--theme-accent-rgb), 0.15);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         .settings-btn:active {
-          transform: translateY(1px);
+          // transform: translateY(1px);
         }
         .settings-btn.primary {
           background: var(--theme-accent-color);
           color: #fff;
           border-color: transparent;
-          box-shadow: 0 4px 12px rgba(var(--theme-accent-rgb), 0.3);
         }
         .settings-btn.primary:hover {
           background: rgba(var(--theme-accent-rgb), 0.9);
-          box-shadow: 0 6px 16px rgba(var(--theme-accent-rgb), 0.4);
         }
         .theme-grid {
           display: grid;
@@ -387,7 +386,7 @@ export default function Settings() {
         {subPage ? (
           <div className="subpage-container">
             <div 
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', cursor: 'pointer', opacity: 0.85 }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', cursor: 'pointer', opacity: 0.85, fontSize: '15px' }}
               onClick={() => setSubPage(null)}
             >
               <MdArrowBack />

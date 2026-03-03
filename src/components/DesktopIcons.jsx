@@ -4,7 +4,6 @@ import Notepad from './apps/Notepad'
 import FileExplorer from './apps/FileExplorer'
 import Browser from './apps/Browser'
 import Todo from './apps/Todo'
-import Clock from './apps/Clock'
 import Paint from './apps/Paint'
 
 const INITIAL_APPS = [
@@ -13,7 +12,6 @@ const INITIAL_APPS = [
   { id: 'explorer', name: 'File Explorer', icon: 'https://img.icons8.com/fluency/48/folder-invoices.png', component: FileExplorer },
   { id: 'browser', name: 'Chrome', icon: 'https://img.icons8.com/fluency/48/chrome.png', component: Browser },
   { id: 'todo', name: 'Todo List', icon: 'https://img.icons8.com/fluency/48/checkmark.png', component: Todo },
-  { id: 'clock', name: 'Clock', icon: 'https://img.icons8.com/fluency/48/alarm-clock.png', component: Clock },
   { id: 'paint', name: 'Paint', icon: 'https://img.icons8.com/fluency/48/microsoft-paint.png', component: Paint },
 ]
 
@@ -83,8 +81,21 @@ export default function DesktopIcons({ onDoubleClick, savedPositions = {}, onPos
       setApps(prevApps => {
         const updatedApps = prevApps.map(app => {
         if (app.id === dragging) {
-          const gridX = Math.round((app.x - 12) / 100) * 100 + 12
-          const gridY = Math.round((app.y - 12) / 105) * 105 + 12
+          let gridX = Math.round((app.x - 12) / 100) * 100 + 12
+          let gridY = Math.round((app.y - 12) / 105) * 105 + 12
+          
+          const isOccupied = (x, y) => prevApps.some(a => a.id !== dragging && Math.abs(a.x - x) < 10 && Math.abs(a.y - y) < 10)
+          
+          let safety = 0
+          while (isOccupied(gridX, gridY) && safety < 100) {
+             gridY += 105
+             if (gridY > window.innerHeight - 100) {
+                gridY = 12
+                gridX += 100
+             }
+             safety++
+          }
+
           return { ...app, x: gridX, y: gridY }
         }
         return app
