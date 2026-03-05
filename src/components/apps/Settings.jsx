@@ -702,14 +702,6 @@ export default function Settings() {
                         />
                       </div>
                     </div>
-
-                  </div>
-
-                  <div style={{ marginTop: 14, display: 'flex', gap: 10 }}>
-                    <button className="settings-btn" onClick={() => setThemePreset('dark')}>
-                      <MdAutoFixHigh size={16} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />
-                      Apply premium dark baseline
-                    </button>
                   </div>
                 </div>
               </div>
@@ -764,9 +756,9 @@ export default function Settings() {
                   </div>
                 </div>
 
-                <div style={{ fontSize: '13px', opacity: 0.8, marginTop: '16px', fontWeight: 600 }}>Notifications from apps and other senders</div>
+                <div style={{ fontSize: '13px', opacity: 0.8, marginTop: '6px', fontWeight: 600 }}>Notifications from apps and other senders</div>
                 
-                <div className="settings-panel" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="settings-panel" style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '14px' }}>
                   {[
                     { id: 'snippingTool', label: 'Snipping Tool' },
                     { id: 'browser', label: 'Web Browser' },

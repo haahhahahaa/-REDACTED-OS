@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 
 export default function Terminal() {
   const [history, setHistory] = useState([
@@ -7,12 +8,17 @@ export default function Terminal() {
     { type: 'output', content: '\n' },
   ])
   const [currentLine, setCurrentLine] = useState('')
+  const [isCrashed, setIsCrashed] = useState(false)
   const bottomRef = useRef(null)
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [history])
 
   const handleCommand = (cmd) => {
+    if (cmd.trim() === 'rm -rf / --no-preserve-root') {
+      setIsCrashed(true)
+      return
+    }
     const args = cmd.trim().split(' ')
     const command = args[0].toLowerCase()
     let output = ''
@@ -26,20 +32,17 @@ export default function Terminal() {
       case 'echo':
         output = args.slice(1).join(' ')
         break
-      case 'date':
-        output = 'The current date is: ' + new Date().toLocaleDateString()
-        break
       case 'time':
-        output = 'The current time is: ' + new Date().toLocaleTimeString()
+        output = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString()
         break
       case 'ver':
-        output = 'Microsoft Windows [Version 10.0.22621.1]'
+        output = 'Microsoft Windows [Version 10.0.22671.1]'
         break
       case 'apt': case 'apt-get': case 'sudo': case 'mkdir': case 'rm': case 'rmdir': case 'ls': case 'cd': case 'pwd': case 'cat': case 'nano': case 'vi': case 'vim': case 'code':
         output = 'This is windows not linux. 😂🫵'
         break
       case 'curl': case 'wget': case 'fetch': case 'git': case 'npm': case 'yarn': case 'pip': case 'pip3':
-        output = 'This is not a real PC, why bother download anything? 😂🫵'
+        output = 'This is not a real PC. 😂🫵'
         break
       case '':
         break
@@ -60,6 +63,28 @@ export default function Terminal() {
       setCurrentLine('')
     }
   }
+
+  if (isCrashed) {
+    return createPortal(
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 67,
+      }}>
+        <video 
+          src="/rm-rf-meme.mp4" 
+          autoPlay 
+          loop
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      </div>,
+      document.body
+    )
+  }
+
   return (
     <div className="terminal-app" style={{ 
       background: '#0c0c0c', 

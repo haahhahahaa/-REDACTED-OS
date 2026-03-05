@@ -5,7 +5,7 @@
         <iframe
           src={import.meta.env.VITE_BROWSER_URL}  // you need an env for this to work
           title="Browser Content"
-          referrerPolicy="origin"
+          referrerPolicy="no-referrer"
           allow="accelerometer; autoplay; clipboard-read; clipboard-write; encrypted-media; gyroscope; picture-in-picture; display-capture; camera; microphone; fullscreen"
           allowFullScreen
           style={{ width: '100%', height: '100%', border: 'none' }}

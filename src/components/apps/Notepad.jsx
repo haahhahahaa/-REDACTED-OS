@@ -29,7 +29,7 @@ export default function Notepad() {
   return (
     <div className="notepad-container">
       <div className="app-toolbar">
-        <button onClick={handleNew}>File</button>
+        <button onClick={handleNew}>New</button>
         <label>
           Open
           <input type="file" accept=".txt" onChange={handleLoad} style={{ display: 'none' }} />

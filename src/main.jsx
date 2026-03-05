@@ -4,14 +4,17 @@ import './index.css'
 
 import App from './App.jsx'
 import { UserProvider } from './contexts/UserContext'
+import { FileSystemProvider } from './contexts/FileSystemContext'
 import MobileBlocker from './components/MobileBlocker'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <UserProvider>
-      <MobileDetectWrapper>
-        <App />
-      </MobileDetectWrapper>
+      <FileSystemProvider>
+        <MobileDetectWrapper>
+          <App />
+        </MobileDetectWrapper>
+      </FileSystemProvider>
     </UserProvider>
   </StrictMode>,
 )

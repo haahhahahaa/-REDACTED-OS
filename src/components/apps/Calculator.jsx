@@ -52,7 +52,7 @@ export default function Calculator() {
   return (
     <div className="calc-container">
       <div className="calc-nav">
-        <span className="calc-mode">Standard</span>
+        <span className="calc-mode">Calculator</span>
         <div style={{ display: 'flex', gap: '4px' }}>
         </div>
       </div>

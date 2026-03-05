@@ -3399,7 +3399,7 @@
   transition: all 0.2s;
 }
 .qs-item.active .qs-icon-wrapper {
-  background: #0067c0;
+  background: var(--theme-accent-color);
   border-color: var(--theme-accent-color);
 }
 .qs-item:hover .qs-icon-wrapper {
