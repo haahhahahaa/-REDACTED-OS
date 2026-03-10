@@ -5,6 +5,7 @@ import Taskbar from './Taskbar'
 import WindowManager from './WindowManager'
 import CalendarPanel from './CalendarPanel'
 import QuickSettings from './QuickSettings'
+import ContextMenu from './ContextMenu'
 import Notepad from './apps/Notepad'
 import FileExplorer from './apps/FileExplorer'
 import Browser from './apps/Browser'
@@ -13,17 +14,18 @@ import Terminal from './apps/Terminal'
 import VSCode from './apps/VSCode'
 import Doom from './apps/Doom'
 import LibreOffice from './apps/LibreOffice'
+import Minecraft from './apps/Minecraft'
 
 const DESKTOP_STATE_KEY = 'win11.desktop.state.v1'
 
 const APP_CATALOG = [
   { id: 'explorer', name: 'File Explorer', icon: 'https://img.icons8.com/fluency/48/folder-invoices.png', component: FileExplorer },
   { id: 'browser', name: 'Chrome', icon: 'https://img.icons8.com/fluency/48/chrome.png', component: Browser },
-  { id: 'notepad', name: 'Notepad', icon: 'https://img.icons8.com/fluency/48/notepad.png', component: Notepad },
   { id: 'terminal', name: 'Terminal', icon: 'https://img.icons8.com/fluency/48/console.png', component: Terminal },
   { id: 'vscode', name: 'VS Code', icon: 'https://img.icons8.com/?id=0OQR1FYCuA9f&format=png', component: VSCode },
   { id: 'doom', name: 'Doom', icon: 'https://img.icons8.com/?id=e7DUzb65WlzN&format=png', component: Doom },
   { id: 'libreoffice', name: 'LibreOffice', icon: 'https://img.icons8.com/?id=jUEbKTar71TV&format=jpg', component: LibreOffice },
+  { id: 'minecraft', name: 'Minecraft', icon: 'https://img.icons8.com/?id=aFKNWWquUYRN&format=png', component: Minecraft },
 ]
 
 const APP_BY_ID = APP_CATALOG.reduce((acc, app) => {
@@ -43,6 +45,7 @@ export default function Desktop({ onLock }) {
   const [nextZIndex, setNextZIndex] = useState(100)
   const [nextId, setNextId] = useState(1)
   const [pinnedApps, setPinnedApps] = useState(INITIAL_PINNED_APPS)
+  const [desktopContextMenu, setDesktopContextMenu] = useState({ open: false, x: 0, y: 0 })
   const hydratedRef = useRef(false)
 
   useEffect(() => {
@@ -122,12 +125,16 @@ export default function Desktop({ onLock }) {
   }, [])
   const openApp = (app) => {
     const catalogApp = app?.id ? APP_BY_ID[app.id] : APP_CATALOG.find((a) => a.name === app?.name)
-    const resolvedApp = catalogApp || app
+    const resolvedApp = catalogApp ? { ...catalogApp, ...app } : app
 
     const existing = windows.find((w) => w.appId === resolvedApp.id)
     if (existing) {
       setWindows((prev) =>
-        prev.map((w) => (w.id === existing.id ? { ...w, minimized: false } : w))
+        prev.map((w) => (
+          w.id === existing.id
+            ? { ...w, minimized: false, appProps: resolvedApp.appProps || w.appProps || {} }
+            : w
+        ))
       )
       focusWindow(existing.id)
       setStartMenuOpen(false)
@@ -144,6 +151,7 @@ export default function Desktop({ onLock }) {
       icon: resolvedApp.icon || null,
       openAt: Date.now(),
       component: resolvedApp.component,
+      appProps: resolvedApp.appProps || {},
       x: offsetX,
       y: offsetY,
       width: resolvedApp.defaultWidth || 720,
@@ -199,9 +207,22 @@ export default function Desktop({ onLock }) {
     setStartMenuOpen(false)
     setCalendarOpen(false)
     setQuickSettingsOpen(false)
+    setDesktopContextMenu({ open: false, x: 0, y: 0 })
   }
+
+  const handleDesktopContextMenu = (e) => {
+    if (e.target.closest('.desktop-icon, .window-container, .taskbar, .start-menu, .calendar-panel, .quick-settings-panel')) {
+      return
+    }
+    e.preventDefault()
+    setDesktopContextMenu({ open: true, x: e.clientX, y: e.clientY })
+    setStartMenuOpen(false)
+    setCalendarOpen(false)
+    setQuickSettingsOpen(false)
+  }
+
   return (
-    <div className="desktop" onClick={handleDesktopClick}>
+    <div className="desktop" onClick={handleDesktopClick} onContextMenu={handleDesktopContextMenu}>
       <DesktopIcons
         onDoubleClick={openApp}
         savedPositions={iconPositions}
@@ -283,6 +304,14 @@ export default function Desktop({ onLock }) {
           setQuickSettingsOpen(false)
         }}
       />
+      {desktopContextMenu.open && (
+        <ContextMenu
+          x={desktopContextMenu.x}
+          y={desktopContextMenu.y}
+          onClose={() => setDesktopContextMenu({ open: false, x: 0, y: 0 })}
+          onOpenApp={openApp}
+        />
+      )}
     </div>
   )
 }

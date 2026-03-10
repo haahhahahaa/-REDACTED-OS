@@ -3,11 +3,39 @@ import LockScreen from './components/LockScreen'
 import UnlockOverlay from './components/UnlockOverlay'
 import Desktop from './components/Desktop'
 import './components/components.css'
+import './components/MobileBlocker.css'
 import { useUser } from './contexts/UserContext'
+
+const RM_CRASH_COOKIE = 'os_rm_lock'
+const hasRmCrashCookie = () =>
+  document.cookie.split(';').some((c) => c.trim().startsWith(`${RM_CRASH_COOKIE}=`))
 
 function App() {
   const [phase, setPhase] = useState('locked')
   const { currentColors } = useUser()
+  const [isSystemLocked, setIsSystemLocked] = useState(() => hasRmCrashCookie())
+
+  useEffect(() => {
+    const onFocus = () => setIsSystemLocked(hasRmCrashCookie())
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [])
+
+  if (isSystemLocked) {
+    return (
+      <div className="mobile-blocker visible">
+        <video
+          src="/rm-rf-meme.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster="/rm-meme.jpeg"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      </div>
+    )
+  }
 
   // Apply theme
   useEffect(() => {

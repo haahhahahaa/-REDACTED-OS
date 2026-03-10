@@ -7,6 +7,8 @@ const STORAGE_KEYS = {
   CUSTOM: 'os.custom-theme.v2',
   LEGACY_THEME: 'os_theme',
   LEGACY_CUSTOM: 'os_custom_theme',
+  BRIGHTNESS: 'os.display.brightness.v1',
+  NIGHT_LIGHT: 'os.display.nightlight.v1',
 };
 
 const defaultThemes = {
@@ -146,6 +148,16 @@ export const UserProvider = ({ children }) => {
     }
   });
 
+  const [brightness, setBrightness] = useState(() => {
+    const saved = Number(localStorage.getItem(STORAGE_KEYS.BRIGHTNESS));
+    if (Number.isFinite(saved) && saved >= 10 && saved <= 100) return saved;
+    return 100;
+  });
+
+  const [nightLight, setNightLight] = useState(() => {
+    return localStorage.getItem(STORAGE_KEYS.NIGHT_LIGHT) === 'true';
+  });
+
   const currentColors = useMemo(() => {
     const base = defaultThemes[theme]?.colors || defaultThemes.dark.colors;
     if (theme !== 'custom') return base;
@@ -161,6 +173,29 @@ export const UserProvider = ({ children }) => {
     localStorage.setItem(STORAGE_KEYS.CUSTOM, JSON.stringify(customTheme));
     localStorage.setItem(STORAGE_KEYS.LEGACY_CUSTOM, JSON.stringify(customTheme));
   }, [customTheme]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.BRIGHTNESS, String(brightness));
+  }, [brightness]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.NIGHT_LIGHT, String(nightLight));
+  }, [nightLight]);
+
+  useEffect(() => {
+    const filter = [];
+    if (brightness < 100) {
+      filter.push(`brightness(${brightness}%)`);
+    }
+    if (nightLight) {
+      filter.push('sepia(40%) hue-rotate(10deg) saturate(150%)');
+    }
+    document.body.style.filter = filter.join(' ') || 'none';
+
+    return () => {
+      document.body.style.filter = 'none';
+    };
+  }, [brightness, nightLight]);
 
   const setThemePreset = (presetId) => {
     if (!defaultThemes[presetId]) return;
@@ -199,6 +234,10 @@ export const UserProvider = ({ children }) => {
         setWallpaper,
         resetCustomTheme,
         availableThemes: defaultThemes,
+        brightness,
+        setBrightness,
+        nightLight,
+        setNightLight,
       }}
     >
       {children}
@@ -206,4 +245,25 @@ export const UserProvider = ({ children }) => {
   );
 };
 
-export const useUser = () => useContext(UserContext);
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (context) return context;
+
+  // Safe fallback if a component renders outside UserProvider
+  return {
+    user: null,
+    setUser: () => {},
+    theme: 'dark',
+    setTheme: () => {},
+    setThemePreset: () => {},
+    currentColors: defaultThemes.dark.colors,
+    updateCustomTheme: () => {},
+    setWallpaper: () => {},
+    resetCustomTheme: () => {},
+    availableThemes: defaultThemes,
+    brightness: 100,
+    setBrightness: () => {},
+    nightLight: false,
+    setNightLight: () => {},
+  };
+};

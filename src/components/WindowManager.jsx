@@ -307,7 +307,7 @@ function Window({ window: win, onClose, onMinimize, onMaximize, onUpdatePos, onU
       </div>
       <div className="window-content">
         {isInteracting && <div className="window-drag-overlay" />}
-        <win.component />
+        {win.component && <win.component {...(win.appProps || {})} />}
       </div>
       {!win.maximized && (
         <>

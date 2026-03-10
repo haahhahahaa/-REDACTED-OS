@@ -52,7 +52,7 @@ function WeatherCard() {
     <div className="w11-card">
       <div className="w11-card-header">
         <MdLocationOn size={14} />
-        {loading ? 'Locating...' : 'Current location'}
+        {loading ? 'Locating...' : 'Weather'}
       </div>
       <div className="w11-card-content">
         <div className="w11-weather-simplified">

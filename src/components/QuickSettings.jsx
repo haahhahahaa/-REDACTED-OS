@@ -9,11 +9,11 @@ import {
   MdSettings,
   MdKeyboardArrowRight,
   MdNightlight,
-  MdAccessibilityNew,
-  MdEdit
+  MdAccessibilityNew
 } from 'react-icons/md';
+import { useUser } from '../contexts/UserContext';
 export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
-  const [brightness, setBrightness] = useState(80);
+  const { brightness, setBrightness, nightLight, setNightLight } = useUser();
   const [volume, setVolume] = useState(50);
   const [wifi, setWifi] = useState(true);
   const [bluetooth, setBluetooth] = useState(true);
@@ -22,7 +22,7 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
   
   const [wifiName, setWifiName] = useState('WiFi');
   const [batteryLevel, setBatteryLevel] = useState(null);
-  const [nightLight, setNightLight] = useState(false);
+
   useEffect(() => {
      if ('getBattery' in navigator) {   // Battery info
         navigator.getBattery().then(bat => {
@@ -57,12 +57,7 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
          }
       }
     }
-    useEffect(() => {    // Night Light 
-      const filter = [];
-      if (brightness < 100) filter.push(`brightness(${brightness}%)`);
-      if (nightLight) filter.push('sepia(40%) hue-rotate(10deg) saturate(150%)');
-      document.body.style.filter = filter.join(' ') || 'none';
-    }, [brightness, nightLight]);
+    return undefined;
   }, [isOpen]);
 
 
@@ -121,7 +116,7 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
                 min="0" 
                 max="100" 
                 value={brightness} 
-                onChange={(e) => setBrightness(e.target.value)}
+                onChange={(e) => setBrightness(Number(e.target.value))}
                 className="qs-slider"
               />
             </div>

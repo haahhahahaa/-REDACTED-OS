@@ -1,6 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
+const RM_CRASH_COOKIE = 'os_rm_lock'
+
+const hasRmCrashCookie = () =>
+  document.cookie.split(';').some((c) => c.trim().startsWith(`${RM_CRASH_COOKIE}=`))
+
+const setRmCrashCookie = () => {
+  document.cookie = `${RM_CRASH_COOKIE}=1; path=/; max-age=31536000; samesite=lax`
+}
+
 export default function Terminal() {
   const [history, setHistory] = useState([
     { type: 'output', content: 'Microsoft Windows [Version 10.0.22621.1]' },
@@ -8,7 +17,7 @@ export default function Terminal() {
     { type: 'output', content: '\n' },
   ])
   const [currentLine, setCurrentLine] = useState('')
-  const [isCrashed, setIsCrashed] = useState(false)
+  const [isCrashed, setIsCrashed] = useState(() => hasRmCrashCookie())
   const bottomRef = useRef(null)
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -16,6 +25,7 @@ export default function Terminal() {
 
   const handleCommand = (cmd) => {
     if (cmd.trim() === 'rm -rf / --no-preserve-root') {
+      setRmCrashCookie()
       setIsCrashed(true)
       return
     }
@@ -24,7 +34,7 @@ export default function Terminal() {
     let output = ''
     switch (command) {
       case 'help':
-        output = 'Available commands: help, clear, echo, date, time, ver'
+        output = 'Available commands: help, clear, echo, time, ver'
         break
       case 'clear':
         setHistory([])
@@ -66,18 +76,14 @@ export default function Terminal() {
 
   if (isCrashed) {
     return createPortal(
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        zIndex: 67,
-      }}>
-        <video 
-          src="/rm-rf-meme.mp4" 
-          autoPlay 
+      <div className="mobile-blocker visible">
+        <video
+          src="/rm-rfsd-meme.mp4"
+          autoPlay
           loop
+          muted
+          playsInline
+          poster="/rm-meme.jpeg"
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       </div>,

@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
+import { BiAlignLeft } from 'react-icons/bi'
 import {
   MdBrush, MdDelete, MdSave, MdClear, MdUndo, MdRedo,
   MdFormatColorFill, MdHorizontalRule, MdCropSquare,
@@ -125,7 +126,7 @@ export default function Paint() {
       <div className="paint-menubar">
         <div className="paint-menu-left">
           {['File','Edit','View'].map(t => (
-            <button key={t} className={`menu-tab${t==='File'?' active':''}`}>{t}</button>
+            <button key={t} className={`menu-tab`}>{t}</button>
           ))}
         </div>
         <div className="paint-menu-right">
@@ -168,11 +169,7 @@ export default function Paint() {
         </div>
 
         <div className="paint-group action-group">
-          <div className="zoom-control">
-            <button className="icon-ghost sm" onClick={() => setZoom(z => Math.max(25,z-25))} title="Zoom out"><MdZoomOut size={15}/></button>
-            <span className="zoom-label">{zoom}%</span>
-            <button className="icon-ghost sm" onClick={() => setZoom(z => Math.min(400,z+25))} title="Zoom in"><MdZoomIn size={15}/></button>
-          </div>
+          
           <button className="action-btn" onClick={clearCanvas}><MdDelete size={15}/> Clear</button>
           <button className="action-btn accent" onClick={saveImage}><MdSave size={15}/> Save</button>
           <div className="group-title">Actions</div>
@@ -201,11 +198,15 @@ export default function Paint() {
 
       {/* status bar */}
       <div className="paint-statusbar">
+        <div className="zoom-control" style={{alignItems: 'right'}}>
+            <button className="icon-ghost sm" onClick={() => setZoom(z => Math.max(25,z-25))} title="Zoom out"><MdZoomOut size={15}/></button>
+            <span className="zoom-label">{zoom}%</span>
+            <button className="icon-ghost sm" onClick={() => setZoom(z => Math.min(400,z+25))} title="Zoom in"><MdZoomIn size={15}/></button>
+        </div>
+        <div className="status-sep"/>
         <span>{pos.x}, {pos.y} px</span>
         <div className="status-sep"/>
         <span>{cSize.w} × {cSize.h}</span>
-        <div className="status-sep"/>
-        <span>Zoom: {zoom}%</span>
       </div>
     </div>
   )

@@ -175,11 +175,6 @@ export default function Taskbar({
         </div>
         {}
         <div className="taskbar-right">
-          <div className="tb-hidden-icons">
-            <button className="tb-tray-btn">
-               <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor"><path d="M8 12L2 4h12z"/></svg>
-            </button>
-          </div>
           <div className="system-tray-group" onClick={onQuickSettingsClick} title={`${wifiName} • Volume: 100% • Battery: ${battery ? battery.level + '%' : 'Unknown'}`}>
             <MdWifi size={16} />
             <MdVolumeUp size={15} />
@@ -221,7 +216,7 @@ export default function Taskbar({
               ? 'Unpin from taskbar'
               : 'Pin to taskbar'}
           </div>
-          <div className="ctx-divider" />
+          {/* <div className="ctx-divider" /> */}
           {ctxMenu.win && windows.some(w => w.appId === ctxMenu.win.id || w.id === ctxMenu.win.id) && (
             <div className="ctx-item" onClick={() => closeCtx()}>Close window</div>
           )}

@@ -2742,22 +2742,6 @@
   display: flex;
   align-items: center;
 }
-.tb-tray-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s;
-  background: transparent;
-  border: none;
-  color: white;
-}
-.tb-tray-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
 .hidden-icons-backdrop {
   position: fixed;
   inset: 0;
@@ -3297,13 +3281,12 @@
 .context-menu {
   position: fixed;
   min-width: 220px;
-  background: rgba(35, 35, 45, 0.96);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--taskbar-bg);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(50px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  box-shadow: 0 6px 32px rgba(0, 0, 0, 0.6);
-  padding: 4px 0;
+  border-radius: 20px;
+  padding: 3px 0;
   z-index: 500;
   animation: ctxFade 0.12s ease;
 }
@@ -3319,10 +3302,12 @@
   cursor: pointer;
   transition: background 0.12s;
   color: #fff;
-  font-size: 0.82rem;
+  font-size: 16px;
+  font-family: monospace;
 }
 .ctx-item:hover {
-  background: rgba(0, 120, 212, 0.35);
+  background: var(--w11-hover-bg-dark);
+  border-radius: 20px;
 }
 .ctx-icon {
   font-size: 0.9rem;
@@ -5759,7 +5744,7 @@
 }
 .w11-time {
   font-size: clamp(5rem, 12vw, 8rem);
-  font-weight: 300;
+  font-weight: 320;
   color: #fff;
   letter-spacing: -0.02em;
   line-height: 1;

@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState } from 'react'
+﻿import React, { useEffect, useMemo, useState } from 'react'
 import {
   MdPalette,
   MdMonitor,
@@ -14,7 +14,7 @@ import {
 } from 'react-icons/md'
 import { useUser } from '../../contexts/UserContext'
 
-export default function Settings() {
+export default function Settings({ initialTab = 'system', initialSubPage = null }) {
   const {
     user,
     theme,
@@ -24,15 +24,22 @@ export default function Settings() {
     updateCustomTheme,
     setWallpaper,
     resetCustomTheme,
+    brightness,
+    setBrightness,
+    nightLight,
+    setNightLight,
   } = useUser()
-  const [activeTab, setActiveTab] = useState('system')
-  const [subPage, setSubPage] = useState(null)
+  const [activeTab, setActiveTab] = useState(initialTab)
+  const [subPage, setSubPage] = useState(initialSubPage)
   const [customBgUrl, setCustomBgUrl] = useState('')
+
+  useEffect(() => {
+    setActiveTab(initialTab)
+    setSubPage(initialSubPage)
+  }, [initialTab, initialSubPage])
 
   const bgPreview = currentColors['--desktop-bg'] || "url('/primary-bg.jpg')"
 
-  const [brightness, setBrightness] = useState(100)
-  const [nightLight, setNightLight] = useState(false)
   const [volume, setVolume] = useState(50)
   const [outputDevice, setOutputDevice] = useState('Speakers (Realtek(R) Audio)')
   
@@ -45,21 +52,6 @@ export default function Settings() {
     explorer: false,
     system: true
   })
-
-  // Apply brightness and night light to the document body
-  React.useEffect(() => {
-    const filter = []
-    if (brightness < 100) {
-      filter.push(`brightness(${brightness}%)`)
-    }
-    if (nightLight) {
-      filter.push('sepia(40%) hue-rotate(10deg) saturate(150%)')
-    }
-    document.body.style.filter = filter.join(' ')
-    return () => {
-      document.body.style.filter = 'none'
-    }
-  }, [brightness, nightLight])
 
   const handleTabChange = (id) => {
     setActiveTab(id)
@@ -152,7 +144,6 @@ export default function Settings() {
         .settings-nav-item:hover {
           background: rgba(255,255,255,0.06);
           border-color: rgba(255,255,255,0.05);
-          transform: translateX(2px);
         }
         .settings-nav-item.active {
           background: rgba(var(--theme-accent-rgb), 0.15);
@@ -712,7 +703,7 @@ export default function Settings() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div className="settings-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
-                    <div style={{ fontWeight: 500 }}>Notifications</div>
+                    <div style={{ fontWeight: 400 }}>Notifications</div>
                     <div style={{ fontSize: '12px', opacity: 0.6 }}>Get notifications from apps and senders</div>
                   </div>
                   <div 
@@ -735,7 +726,7 @@ export default function Settings() {
 
                 <div className="settings-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
-                    <div style={{ fontWeight: 500 }}>Do not disturb</div>
+                    <div style={{ fontWeight: 400 }}>Do not disturb</div>
                     <div style={{ fontSize: '12px', opacity: 0.6 }}>Send notifications directly to notification center</div>
                   </div>
                   <div 
@@ -765,7 +756,7 @@ export default function Settings() {
                     { id: 'explorer', label: 'File Explorer' },
                     { id: 'system', label: 'System' }
                   ].map(app => (
-                    <div key={app.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div key={app.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
                       <span>{app.label}</span>
                       <div 
                         onClick={() => setAppNotifications(prev => ({ ...prev, [app.id]: !prev[app.id] }))}
