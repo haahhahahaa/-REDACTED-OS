@@ -5804,7 +5804,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 42%, transparent 72%);
   pointer-events: none;
 }
 .w11-card:hover {
@@ -5838,9 +5838,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  position: relative;
+  z-index: 1;
 }
 .w11-weather-simplified .w11-icon {
-  font-size: 2.2rem;
+  display: block;
+  flex: 0 0 auto;
 }
 .w11-weather-info {
   display: flex;

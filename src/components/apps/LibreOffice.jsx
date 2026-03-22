@@ -3,7 +3,7 @@ export default function LibreOffice() {
     <div className="chrome-app">
       <div className="chrome-content" style={{ height: '100%' }}>
         <iframe
-          src={import.meta.env.VITE_LIBREOFFICE_URL}  // you need an env for this to work
+          src="https://cryptpad.fr"  
           title="LibreOffice"
           referrerPolicy="no-referrer"
           allow="accelerometer; autoplay; clipboard-read; clipboard-write; encrypted-media; gyroscope; picture-in-picture; display-capture; camera; microphone; fullscreen"

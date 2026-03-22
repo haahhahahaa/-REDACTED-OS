@@ -1,13 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from 'react'
-import { 
-  MdWbSunny, 
-  MdCloudQueue, 
-  MdLocationOn,
-  MdTrendingUp,
-  MdTrendingDown,
-  MdOutlineInsights
-} from 'react-icons/md'
-
+import { MdWbSunny, MdCloudQueue, MdLocationOn, MdTrendingUp, MdTrendingDown, MdOutlineInsights } from 'react-icons/md'
+import { Icon } from '@iconify/react'
 function formatClock(d) {
   const h = d.getHours().toString().padStart(2, '0')
   const m = d.getMinutes().toString().padStart(2, '0')
@@ -16,12 +9,27 @@ function formatClock(d) {
 function formatDate(d) {
   return d.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })
 }
+function getWeatherIcon(code) {
+  if (code === 0) return 'meteocons:clear-day'
+  if ([1, 2, 3].includes(code)) return 'meteocons:overcast'
+  if ([45, 48].includes(code)) return 'meteocons:fog'
+  if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return 'meteocons:rain'
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return 'meteocons:snow'
+  if ([95, 96, 99].includes(code)) return 'meteocons:thunderstorms'
+  return 'meteocons:clear-day-fill'
+}
 function WeatherCard() {
   const [temp, setTemp] = useState('--')
   const [wind, setWind] = useState('--')
   const [label, setLabel] = useState('Loading...')
   const [loading, setLoading] = useState(true)
-
+  const [code, setCode] = useState(null)
+  const WeatherIcon = getWeatherIcon(code)
+  const [iconTick, setIconTick] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setIconTick(t => t + 1), 15000)
+    return () => clearInterval(id)
+  }, [])
   useEffect(() => {
     let dead = false
     const fetchWeather = async (lat, lon) => {
@@ -32,6 +40,7 @@ function WeatherCard() {
         setTemp(Math.round(d?.current?.temperature_2m ?? 0))
         setWind(Math.round(d?.current?.wind_speed_10m ?? 0))
         const c = d?.current?.weather_code
+        setCode(c)
         setLabel(c === 0 ? 'Clear' : [1, 2, 3].includes(c) ? 'Cloudy' : [45, 48].includes(c) ? 'Fog' : [95, 96, 99].includes(c) ? 'Storm' : 'Weather')
       } catch {
         if (!dead) setLabel('Unavailable')
@@ -42,7 +51,6 @@ function WeatherCard() {
     navigator.geolocation?.getCurrentPosition(
       ({ coords }) => fetchWeather(coords.latitude, coords.longitude)
     ) 
-
     return () => {
       dead = true
     }
@@ -56,7 +64,7 @@ function WeatherCard() {
       </div>
       <div className="w11-card-content">
         <div className="w11-weather-simplified">
-          <MdWbSunny className="w11-icon" color="#FFD700" />
+          <Icon key={iconTick} className="w11-icon" icon={WeatherIcon} width="48" height="48" />
           <div className="w11-weather-info">
             <span className="w11-weather-degree">{temp}°F</span>
             <span className="w11-weather-label">{label} • {wind} mph</span>

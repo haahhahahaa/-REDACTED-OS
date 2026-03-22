@@ -14,7 +14,6 @@ function App() {
   const [phase, setPhase] = useState('locked')
   const { currentColors } = useUser()
   const [isSystemLocked, setIsSystemLocked] = useState(() => hasRmCrashCookie())
-
   useEffect(() => {
     const onFocus = () => setIsSystemLocked(hasRmCrashCookie())
     window.addEventListener('focus', onFocus)
@@ -37,7 +36,6 @@ function App() {
     )
   }
 
-  // Apply theme
   useEffect(() => {
     const root = document.documentElement;
     if (currentColors) {
@@ -46,8 +44,6 @@ function App() {
       });
     }
   }, [currentColors]);
-
-  // Global keyboard listener
   useEffect(() => {
     const onKey = (e) => {
       if (
@@ -64,15 +60,12 @@ function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [phase])
-
   const handleScreenClick = () => {
     if (phase === 'locked') setPhase('unlocking')
   }
-
   if (phase === 'desktop') {
     return <Desktop onLock={() => setPhase('locked')} />
   }
-
   return (
     <div
       className="app-root"

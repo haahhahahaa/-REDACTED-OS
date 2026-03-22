@@ -128,16 +128,14 @@ export const UserProvider = ({ children }) => {
   const [user, setUser] = useState({
     name: '[REDACTED]',
     avatar: 'https://avatars.githubusercontent.com/u/189115938?v=4&size=64',
-    email: 'user@example.com',
+    email: 'me@redac.me',
     accountType: 'Local Account'
   });
-
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem(STORAGE_KEYS.THEME)
       || localStorage.getItem(STORAGE_KEYS.LEGACY_THEME)
       || 'dark';
   });
-
   const [customTheme, setCustomTheme] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CUSTOM)
@@ -147,41 +145,33 @@ export const UserProvider = ({ children }) => {
       return {};
     }
   });
-
   const [brightness, setBrightness] = useState(() => {
     const saved = Number(localStorage.getItem(STORAGE_KEYS.BRIGHTNESS));
     if (Number.isFinite(saved) && saved >= 10 && saved <= 100) return saved;
     return 100;
   });
-
   const [nightLight, setNightLight] = useState(() => {
     return localStorage.getItem(STORAGE_KEYS.NIGHT_LIGHT) === 'true';
   });
-
   const currentColors = useMemo(() => {
     const base = defaultThemes[theme]?.colors || defaultThemes.dark.colors;
     if (theme !== 'custom') return base;
     return { ...defaultThemes.dark.colors, ...customTheme };
   }, [theme, customTheme]);
-
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.THEME, theme);
     localStorage.setItem(STORAGE_KEYS.LEGACY_THEME, theme);
   }, [theme]);
-
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CUSTOM, JSON.stringify(customTheme));
     localStorage.setItem(STORAGE_KEYS.LEGACY_CUSTOM, JSON.stringify(customTheme));
   }, [customTheme]);
-
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.BRIGHTNESS, String(brightness));
   }, [brightness]);
-
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.NIGHT_LIGHT, String(nightLight));
   }, [nightLight]);
-
   useEffect(() => {
     const filter = [];
     if (brightness < 100) {
@@ -191,17 +181,14 @@ export const UserProvider = ({ children }) => {
       filter.push('sepia(40%) hue-rotate(10deg) saturate(150%)');
     }
     document.body.style.filter = filter.join(' ') || 'none';
-
     return () => {
       document.body.style.filter = 'none';
     };
   }, [brightness, nightLight]);
-
   const setThemePreset = (presetId) => {
     if (!defaultThemes[presetId]) return;
     setTheme(presetId);
   };
-
   const updateCustomTheme = (updates) => {
     if (theme !== 'custom') {
       const base = defaultThemes[theme]?.colors || defaultThemes.dark.colors;
@@ -211,11 +198,9 @@ export const UserProvider = ({ children }) => {
     }
     setCustomTheme((prev) => ({ ...prev, ...updates }));
   };
-
   const setWallpaper = (value) => {
     updateCustomTheme({ '--desktop-bg': toCssUrl(value) });
   };
-
   const resetCustomTheme = () => {
     setCustomTheme({ ...defaultThemes.dark.colors });
     setTheme('custom');
@@ -248,8 +233,6 @@ export const UserProvider = ({ children }) => {
 export const useUser = () => {
   const context = useContext(UserContext);
   if (context) return context;
-
-  // Safe fallback if a component renders outside UserProvider
   return {
     user: null,
     setUser: () => {},
