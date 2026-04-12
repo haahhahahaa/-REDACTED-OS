@@ -1,24 +1,62 @@
 import { useState, useEffect, useRef } from 'react'
-import {
-  MdVolumeUp,
-  MdBattery0Bar,
-  MdBattery1Bar,
-  MdBattery2Bar,
-  MdBattery3Bar,
-  MdBattery4Bar,
-  MdBattery5Bar,
-  MdBattery6Bar,
-  MdBatteryCharging20,
-  MdBatteryCharging50,
-  MdBatteryCharging80,
-  MdBatteryCharging90,
-  MdSignalWifi0Bar,
-  MdSignalWifi1Bar,
-  MdSignalWifi2Bar,
-  MdSignalWifi3Bar,
-  MdSignalWifi4Bar,
-  MdSignalWifiOff,
-} from 'react-icons/md'
+import { LuWifi, LuWifiHigh, LuWifiLow, LuWifiOff } from "react-icons/lu";
+import { BsBatteryCharging, BsBatteryHalf, BsBatteryFull } from "react-icons/bs";
+import { IoVolumeLow, IoVolumeMedium, IoVolumeHigh, IoVolumeMute } from "react-icons/io5";
+import { useUser } from '../contexts/UserContext';  
+
+const SYS_TRAY_ICON_SIZE = 18
+const SysWifi = ({ level }) => {
+  switch (level) {
+    case 'off':
+      return <LuWifiOff size={SYS_TRAY_ICON_SIZE} />;
+    case 'zero':
+      return <LuWifiLow size={SYS_TRAY_ICON_SIZE} />;
+    case 'low':
+      return <LuWifiHigh size={SYS_TRAY_ICON_SIZE} />;
+    case 'high':
+      return <LuWifi size={SYS_TRAY_ICON_SIZE} />;
+    default:
+      return <LuWifi size={SYS_TRAY_ICON_SIZE} />;
+  }
+}
+const SysVolume = ({ volume }) => {
+  const level = volume === 0 ? 0 : volume < 33 ? 1 : volume < 66 ? 2 : 3;
+  const prevLevelRef = useRef(level);
+  const [animClass, setAnimClass] = useState('');
+  useEffect(() => {
+    if (level > prevLevelRef.current) {
+      setAnimClass('vol-slide-left');
+    } else if (level < prevLevelRef.current) {
+      setAnimClass('vol-slide-right');
+    }
+    prevLevelRef.current = level;
+  }, [level]);
+  let Icon = IoVolumeHigh;
+  if (volume === 0) Icon = IoVolumeMute;
+  else if (volume < 33) Icon = IoVolumeLow;
+  else if (volume < 66) Icon = IoVolumeMedium;  
+  return (
+    <div 
+      className={`system-tray-item ${animClass}`} 
+      onAnimationEnd={() => setAnimClass('')}
+    >
+      <Icon size={SYS_TRAY_ICON_SIZE} />
+    </div>
+  );
+}
+const SysBattery = ({ charging, level }) => {
+  const safeLevel = Math.max(0, Math.min(100, Number(level) || 0))
+  if (charging) return <BsBatteryCharging size={SYS_TRAY_ICON_SIZE} style={{ color: '#86efac' }} />
+  if (safeLevel > 80) return <BsBatteryFull size={SYS_TRAY_ICON_SIZE} />
+  return (
+    <BsBatteryHalf 
+      size={SYS_TRAY_ICON_SIZE} 
+      style={{ 
+        color: safeLevel <= 15 ? '#f87171' : safeLevel <= 35 ? '#fbbf24' : 'currentColor' 
+      }} 
+    />
+  )
+}
 export default function Taskbar({
   onStartClick,
   onQuickSettingsClick,
@@ -38,6 +76,7 @@ export default function Taskbar({
   const [draggedApp, setDraggedApp] = useState(null)
   const [hoveredAppKey, setHoveredAppKey] = useState(null)
   const [wifiLevel, setWifiLevel] = useState('high') 
+  const {volume} = useUser()
   const wasOnlineRef = useRef(navigator.onLine)
   const getWifiLevelFromConnection = () => {
     if (!navigator.onLine) return 'off'
@@ -57,37 +96,6 @@ export default function Taskbar({
     }
     setWifiLevel(finalLevel)
   }
-  const wifiIconMap = {
-    off: MdSignalWifiOff,
-    zero: MdSignalWifi0Bar,
-    low: MdSignalWifi1Bar,
-    high: MdSignalWifi3Bar,
-    full: MdSignalWifi4Bar,
-  }
-  const WifiTrayIcon = wifiIconMap[wifiLevel] || MdSignalWifi2Bar
-  const VolumeTrayIcon = MdVolumeUp
-  const level = battery?.level ?? 100
-  const BatteryTrayIcon = battery?.charging
-    ? level <= 25
-      ? MdBatteryCharging20
-      : level <= 60
-        ? MdBatteryCharging50
-        : level <= 85
-          ? MdBatteryCharging80
-          : MdBatteryCharging90
-    : level <= 5
-      ? MdBattery0Bar
-      : level <= 20
-        ? MdBattery1Bar
-        : level <= 35
-          ? MdBattery2Bar
-          : level <= 50
-            ? MdBattery3Bar
-            : level <= 70
-              ? MdBattery4Bar
-              : level <= 90
-                ? MdBattery5Bar
-                : MdBattery6Bar
   useEffect(() => {
     if ('connection' in navigator) {
       const conn = navigator.connection;
@@ -291,16 +299,13 @@ export default function Taskbar({
             style={{
               position: 'relative',
               ...(hoveredRightKey === 'tray'
-                ? {
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
-                  }
+                ? { background: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.05)' }
                 : {}),
             }}
           >
-            <div className="system-tray-item"><WifiTrayIcon size={35} /></div>
-            <div className="system-tray-item"><VolumeTrayIcon size={35} /></div>
-            <div className="system-tray-item"><BatteryTrayIcon size={35} /></div>
+            <div className="system-tray-item"><SysWifi level={wifiLevel} /></div>
+            <SysVolume volume={volume}/>
+            <div className="system-tray-item"><SysBattery charging={battery?.charging} level={battery?.level ?? 100} /></div>
           </div>
           <div
             className="taskbar-clock"

@@ -13,6 +13,7 @@ import Doom from './apps/Doom'
 import VSCode from './apps/VSCode'
 import LibreOffice from './apps/LibreOffice'
 import Minecraft from './apps/Minecraft'
+import MusicPlayer from './apps/MusicPlayer'
 
 const APPS = [
   { id: 'profile', name: 'Profile', icon: '/icons/profile.png', component: Profile },
@@ -28,6 +29,7 @@ const APPS = [
   { id: 'vscode', name: 'VS Code', icon: '/icons/vscode.png', component: VSCode },
   { id: 'libreoffice', name: 'LibreOffice', icon: '/icons/libreoffice.jpg', component: LibreOffice },
   { id: 'minecraft', name: 'Minecraft', icon: '/icons/minecraft.png', component: Minecraft },
+  { id: 'music', name: 'Music', icon: '/icons/minecraft.png', component: MusicPlayer   },
 ]
 
 export default function StartMenu({ isOpen, onToggle, onAppClick, onLock }) {

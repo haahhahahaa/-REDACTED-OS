@@ -13,14 +13,6 @@ A type-of portfolio that is represented through a webOS. Made using React.
 
 ## Deployment
 
-### `.env` example
-
-Create `.env` with:
-
-```VITE_BROWSER_URL=url_to_browser```
-
-```VITE_LIBREOFFICE_URL=url_to_libreoffice```
-
 ### Local
 
 1. Clone the repository:
@@ -47,10 +39,7 @@ Alternatively, you can deploy it to Vercel:
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2F%5BREDACTED%5D%2F%5BREDACTED%5D-os) 
 
 ### Notes
-
-This project wasn't that hard to begin with, but configuring a real browser to work in this WebOS was a lot hard. That part alone took me a lot of time.
-
-This is why, I request you to take a look at the [browser setup notes](src/notes/browser.md) for configuring this to work.
+TBD
 
 ## License
 

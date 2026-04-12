@@ -8,19 +8,21 @@ function Doom() {
   const instanceRef = useRef(null);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
-
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     let disposed = false;
     if (!document.getElementById('js-dos-css')) {
-      const link = document.createElement('link');
-      link.id = 'js-dos-css';
-      link.rel = 'stylesheet';
-      link.href = JS_DOS_CDN + 'js-dos.css';
-      document.head.appendChild(link);
+      const style = document.createElement('style');
+      style.id = 'js-dos-css';
+      document.head.appendChild(style);
+      fetch(JS_DOS_CDN + 'js-dos.css')
+        .then((res) => res.text())
+        .then((text) => {
+          const idx = text.indexOf('.jsdos-rso{');
+          style.innerHTML = idx > -1 ? text.substring(idx) : text;
+        });
     }
-
     const loadScript = (src) =>
       new Promise((resolve, reject) => {
         const existing = document.querySelector(`script[src="${src}"]`);
@@ -29,7 +31,6 @@ function Doom() {
             resolve();
             return;
           }
-
           const handleLoad = () => {
             existing.dataset.loaded = 'true';
             resolve();
@@ -49,19 +50,17 @@ function Doom() {
         s.onerror = () => reject(new Error(`Failed to load script: ${src}`));
         document.head.appendChild(s);
       });
-
     (async () => {
       try {
         setStatus('loading');
         setError('');
-
         await loadScript(JS_DOS_CDN + 'js-dos.js');
         if (disposed) return;
-
         const dosFactory = window.Dos;
         if (typeof dosFactory !== 'function') {
           throw new Error('js-dos loaded but window.Dos is unavailable');
         }
+        await new Promise(r => setTimeout(r, 100));
         instanceRef.current = dosFactory(container, {
           url: DOOM_BUNDLE,
         });
@@ -76,7 +75,6 @@ function Doom() {
         setStatus('error');
       }
     })();
-
     return () => {
       disposed = true;
       try {
@@ -88,7 +86,7 @@ function Doom() {
       }
     };
   }, []);
-
+  
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', background: '#000' }}>
       <div
@@ -115,7 +113,6 @@ function Doom() {
           Loading DOOM…
         </div>
       )}
-
       {status === 'error' && (
         <div
           style={{

@@ -259,7 +259,7 @@ function Window({ window: win, onClose, onMinimize, onMaximize, onUpdatePos, onU
         <span className="window-title">
           {win.icon && (
             <span className="window-title-icon">
-              {typeof win.icon === 'string' && win.icon.startsWith('http') ? (
+              {typeof win.icon === 'string' ? (
                 <img src={win.icon} alt="" width={16} height={16} draggable="false" />
               ) : (
                 win.icon

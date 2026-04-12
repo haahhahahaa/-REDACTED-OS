@@ -3,7 +3,7 @@ export default function Minecraft() {
     <div className="chrome-app">
       <div className="chrome-content" style={{ height: '100%' }}>
         <iframe
-          src="https://classic.minecraft.net/"  // you need an env for this to work
+          src="https://classic.minecraft.net/" 
           title="Browser Content"
           referrerPolicy="no-referrer"
           allow="accelerometer; autoplay; clipboard-read; clipboard-write; encrypted-media; gyroscope; picture-in-picture; display-capture; camera; microphone; fullscreen"

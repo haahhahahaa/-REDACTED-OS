@@ -3,7 +3,7 @@ export default function VSCode() {
     <div className="chrome-app">
       <div className="chrome-content" style={{ height: '100%' }}>
         <iframe
-          src="https://github1s.com/redac1ed/-REDACTED-OS"  // you need an env for this to work
+          src="https://github1s.com/redac1ed/-REDACTED-OS"  
           title="VS Code"
           referrerPolicy="no-referrer"
           allow="accelerometer; autoplay; clipboard-read; clipboard-write; encrypted-media; gyroscope; picture-in-picture; display-capture; camera; microphone; fullscreen"

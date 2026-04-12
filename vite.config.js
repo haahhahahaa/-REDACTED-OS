@@ -7,17 +7,6 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react()
-    ],
-    server: {
-      proxy: {
-        '/vps': {
-          target: env.VITE_BROWSER_URL,  // you need an env for this to work
-          changeOrigin: true,
-          secure: false,
-          rewrite: (path) => path.replace(/^\/vps/, ''),
-          cookieDomainRewrite: ""
-        }
-      }
-    }
+    ]
   }
 })

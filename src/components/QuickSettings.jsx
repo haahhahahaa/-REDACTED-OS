@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { 
   MdWifi, 
   MdBluetooth, 
@@ -12,19 +12,17 @@ import {
   MdAccessibilityNew
 } from 'react-icons/md';
 import { useUser } from '../contexts/UserContext';
+
 export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
-  const { brightness, setBrightness, nightLight, setNightLight } = useUser();
-  const [volume, setVolume] = useState(50);
+  const { brightness, setBrightness, nightLight, setNightLight, volume, setVolume, resumeAudio } = useUser();
   const [wifi, setWifi] = useState(true);
   const [bluetooth, setBluetooth] = useState(true);
   const [airplane, setAirplane] = useState(false);
   const [saver, setSaver] = useState(false);
-  
   const [wifiName, setWifiName] = useState('WiFi');
   const [batteryLevel, setBatteryLevel] = useState(null);
-
   useEffect(() => {
-     if ('getBattery' in navigator) {   // Battery info
+     if ('getBattery' in navigator) {  
         navigator.getBattery().then(bat => {
             setBatteryLevel(Math.round(bat.level * 100));
             const updateBattery = () => setBatteryLevel(Math.round(bat.level * 100));
@@ -34,7 +32,7 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
      }
   }, []);
   useEffect(() => {
-    if (!isOpen) return;     // WiFi info, only wifi/cellular/ethernet
+    if (!isOpen) return;    
     if ('connection' in navigator) {
       const conn = navigator.connection;
       const updateWifi = () => {
@@ -59,9 +57,8 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
     }
     return undefined;
   }, [isOpen]);
-
-
   if (!isOpen) return null;
+
   return (
     <div className="quick-settings-overlay" onClick={onClose}>
       <div className="quick-settings-panel" onClick={(e) => e.stopPropagation()}>
@@ -126,14 +123,7 @@ export default function QuickSettings({ isOpen, onClose, onOpenSettings }) {
             <div className="qs-slider-container">
               <div className="qs-slider-track" />
               <div className="qs-slider-fill" style={{ width: `${volume}%` }} />
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
-                value={volume} 
-                onChange={(e) => setVolume(e.target.value)}
-                className="qs-slider"
-              />
+              <input type="range" min="0" max="100" value={volume} onChange={(e) => { setVolume(Number(e.target.value)); resumeAudio(); }} className="qs-slider" />
             </div>
           </div>
         </div>

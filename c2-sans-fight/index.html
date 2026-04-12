@@ -17,6 +17,67 @@
     <!-- Chrome for Android web app tags -->
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="shortcut icon" sizes="256x256" href="icon-256.png" />
+    <script>
+      // Global Audio Interceptor for OS Sync
+      window.__appVolumes = { gains: new Set(), elements: new Set(), value: 50 };
+      if (!window.__audioPatched) {
+        window.__audioPatched = true;
+        if (typeof AudioNode !== 'undefined') {
+          const originalConnect = AudioNode.prototype.connect;
+          AudioNode.prototype.connect = function() {
+            const dest = arguments[0];
+            if (dest && typeof AudioDestinationNode !== 'undefined' && dest instanceof AudioDestinationNode) {
+              const ctx = dest.context;
+              if (!ctx.__masterGain) {
+                ctx.__masterGain = ctx.createGain();
+                ctx.__masterGain.gain.value = window.__appVolumes.value / 100;
+                originalConnect.call(ctx.__masterGain, dest);
+                window.__appVolumes.gains.add(ctx.__masterGain);
+              }
+              arguments[0] = ctx.__masterGain;
+            }
+            return originalConnect.apply(this, arguments);
+          };
+        }
+        if (typeof HTMLMediaElement !== 'undefined') {
+          const volumeDescr = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume') || Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype.__proto__, 'volume');
+          if (volumeDescr) {
+            const originalSet = volumeDescr.set;
+            const originalGet = volumeDescr.get;
+            Object.defineProperty(HTMLMediaElement.prototype, 'volume', {
+              get() { return this.__originalVolume !== undefined ? this.__originalVolume : originalGet.call(this); },
+              set(val) {
+                this.__originalVolume = val;
+                window.__appVolumes.elements.add(this);
+                originalSet.call(this, val * (window.__appVolumes.value / 100));
+              }
+            });
+          }
+          const originalPlay = HTMLMediaElement.prototype.play;
+          HTMLMediaElement.prototype.play = function() {
+            if (this.__originalVolume === undefined) {
+              window.__appVolumes.elements.add(this);
+              try { this.volume = this.volume; } catch(e){}
+            }
+            return originalPlay.apply(this, arguments);
+          };
+        }
+      }
+      window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'OS_VOLUME_CHANGE') {
+          window.__appVolumes.value = e.data.volume;
+          window.__appVolumes.gains.forEach(g => {
+            try {
+              if (g.gain.setTargetAtTime) g.gain.setTargetAtTime(e.data.volume / 100, g.context.currentTime, 0.01);
+              else g.gain.value = e.data.volume / 100;
+            } catch(err) {}
+          });
+          window.__appVolumes.elements.forEach(el => {
+            try { el.volume = el.__originalVolume !== undefined ? el.__originalVolume : 1; } catch(err) {}
+          });
+        }
+      });
+    </script>
     <style>
         body {
             /* Отключаем скролл */

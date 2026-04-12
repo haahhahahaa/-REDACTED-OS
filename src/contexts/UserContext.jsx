@@ -1,4 +1,75 @@
-import { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { createContext, useContext, useMemo, useState, useEffect, useRef } from 'react';
+
+// Initialize global volume state
+window.__appVolumes = window.__appVolumes || {
+  gains: new Set(),
+  elements: new Set(),
+  value: 50
+};
+
+if (!window.__audioPatched && typeof window !== 'undefined') {
+  window.__audioPatched = true;
+
+  // Intercept Web Audio API connections to master destination
+  if (typeof AudioNode !== 'undefined') {
+    const originalConnect = AudioNode.prototype.connect;
+    AudioNode.prototype.connect = function() {
+      const dest = arguments[0];
+      // When connecting to output (AudioDestinationNode), route through our master gain
+      if (dest && typeof AudioDestinationNode !== 'undefined' && dest instanceof AudioDestinationNode) {
+        const ctx = dest.context;
+        if (!ctx.__masterGain) {
+          ctx.__masterGain = ctx.createGain();
+          ctx.__masterGain.gain.value = window.__appVolumes.value / 100;
+          originalConnect.call(ctx.__masterGain, dest);
+          window.__appVolumes.gains.add(ctx.__masterGain);
+        }
+        // Substitute destination with master gain
+        arguments[0] = ctx.__masterGain;
+      }
+      return originalConnect.apply(this, arguments);
+    };
+  }
+
+  // Intercept HTMLMediaElement (audio/video tags)
+  if (typeof HTMLMediaElement !== 'undefined') {
+    const volumeDescr = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume');
+    if (volumeDescr) {
+      const originalSet = volumeDescr.set;
+      const originalGet = volumeDescr.get;
+      Object.defineProperty(HTMLMediaElement.prototype, 'volume', {
+        get() {
+          return this.__originalVolume !== undefined ? this.__originalVolume : originalGet.call(this);
+        },
+        set(val) {
+          this.__originalVolume = val;
+          window.__appVolumes.elements.add(this);
+          originalSet.call(this, val * (window.__appVolumes.value / 100));
+        },
+        configurable: true,
+        enumerable: true
+      });
+    }
+    const originalPlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function() {
+      if (this.__originalVolume === undefined) {
+        window.__appVolumes.elements.add(this);
+        this.volume = this.volume; // triggers our setter
+      }
+      return originalPlay.apply(this, arguments);
+    };
+  }
+}
+
+// Add message listener for iframe syncing
+if (typeof window !== 'undefined') {
+  window.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'SYNC_VOLUME_REQUEST') {
+      window.__appVolumes.value = e.data.volume;
+      // Triggers update for any elements/gains without reacting through React state if needed
+    }
+  });
+}
 
 const UserContext = createContext();
 const STORAGE_KEYS = {
@@ -151,6 +222,9 @@ export const UserProvider = ({ children }) => {
   const [nightLight, setNightLight] = useState(() => {
     return localStorage.getItem(STORAGE_KEYS.NIGHT_LIGHT) === 'true';
   });
+  const [volume, setVolume] = useState(50);
+  const audioCtxRef = useRef(null);
+  const masterGainRef = useRef(null);
   const currentColors = useMemo(() => {
     const base = defaultThemes[theme]?.colors || defaultThemes.dark.colors;
     if (theme !== 'custom') return base;
@@ -170,6 +244,59 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.NIGHT_LIGHT, String(nightLight));
   }, [nightLight]);
+  useEffect(() => {
+    // Local dummy context for anything explicitly connected
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      masterGainRef.current = audioCtxRef.current.createGain();
+      masterGainRef.current.connect(audioCtxRef.current.destination);
+    }
+    if (masterGainRef.current) {
+      masterGainRef.current.gain.value = volume / 100;
+    }
+    
+    // Global tracking update
+    window.__appVolumes.value = volume;
+    window.__appVolumes.gains.forEach(gain => {
+      try {
+        if (gain.context && gain.context.state !== 'closed') {
+          // Some custom gain nodes might need to be smoothly transitioned
+          gain.gain.setTargetAtTime(volume / 100, gain.context.currentTime, 0.01);
+        }
+      } catch (e) {
+        window.__appVolumes.gains.delete(gain);
+      }
+    });
+
+    window.__appVolumes.elements.forEach(el => {
+      try {
+        if (document.body.contains(el)) {
+          // Re-trigger our setter with its original volume
+          el.volume = el.__originalVolume !== undefined ? el.__originalVolume : 1;
+        } else {
+           window.__appVolumes.elements.delete(el);
+        }
+      } catch (e) {}
+    });
+
+    // Notify any same-origin iframes
+    document.querySelectorAll('iframe').forEach(iframe => {
+      try {
+        // Send a message via postMessage and also try setting their volume array if same origin
+        iframe.contentWindow.postMessage({ type: 'OS_VOLUME_CHANGE', volume: volume }, '*');
+        if (iframe.contentWindow && iframe.contentWindow.__appVolumes) {
+          iframe.contentWindow.__appVolumes.value = volume;
+          iframe.contentWindow.__appVolumes.gains.forEach(g => {
+            try { g.gain.setTargetAtTime(volume / 100, g.context.currentTime, 0.01); } catch {}
+          });
+          iframe.contentWindow.__appVolumes.elements.forEach(el => {
+            try { el.volume = el.__originalVolume !== undefined ? el.__originalVolume : 1; } catch {}
+          });
+        }
+      } catch (e) {} // Cross-origin block
+    });
+
+  }, [volume]);
   useEffect(() => {
     const filter = [];
     if (brightness < 100) {
@@ -203,6 +330,16 @@ export const UserProvider = ({ children }) => {
     setCustomTheme({ ...defaultThemes.dark.colors });
     setTheme('custom');
   };
+  const resumeAudio = async () => {
+    if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+      await audioCtxRef.current.resume();
+    }
+  };
+  const connectAudioSource = (audioSource) => {
+    if (masterGainRef.current && audioSource) {
+      audioSource.connect(masterGainRef.current);
+    }
+  };
 
   return (
     <UserContext.Provider
@@ -221,6 +358,10 @@ export const UserProvider = ({ children }) => {
         setBrightness,
         nightLight,
         setNightLight,
+        volume,
+        setVolume,
+        resumeAudio,
+        connectAudioSource,
       }}
     >
       {children}
@@ -246,5 +387,9 @@ export const useUser = () => {
     setBrightness: () => {},
     nightLight: false,
     setNightLight: () => {},
+    volume: 50,
+    setVolume: () => {},
+    resumeAudio: async () => {},
+    connectAudioSource: () => {},
   };
 };

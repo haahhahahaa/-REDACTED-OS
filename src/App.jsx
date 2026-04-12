@@ -19,7 +19,6 @@ function App() {
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
   }, [])
-
   if (isSystemLocked) {
     return (
       <div className="mobile-blocker visible">
@@ -35,7 +34,6 @@ function App() {
       </div>
     )
   }
-
   useEffect(() => {
     const root = document.documentElement;
     if (currentColors) {

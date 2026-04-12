@@ -3,6 +3,17 @@ import { Terminal as XTerm } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import 'xterm/css/xterm.css'
 
+let globalEmu = null
+let globalTerm = null
+
+function getGlobalEmulator() {
+  return globalEmu
+}
+function setGlobalEmulator(emu, term) {
+  globalEmu = emu
+  globalTerm = term
+}
+
 export default function Terminal() {
   const hostRef = useRef(null)
   const emulatorRef = useRef(null)
@@ -12,7 +23,7 @@ export default function Terminal() {
   const resizeHandlerRef = useRef(null)
   const resizeObserverRef = useRef(null)
   const bootedRef = useRef(false)
-  const [status, setStatus] = useState('Loading emulator...')
+  const [status, setStatus] = useState('')
   useEffect(() => {
     if (bootedRef.current) return
     bootedRef.current = true
@@ -33,7 +44,7 @@ export default function Terminal() {
         await loadScript()
         if (cancelled || !hostRef.current) return
         hostRef.current.innerHTML = ''
-        setStatus('Booting Linux...')
+        const existingEmu = getGlobalEmulator()
         const term = new XTerm({
           cursorBlink: true,
           convertEol: true,
@@ -74,39 +85,51 @@ export default function Terminal() {
         term.open(hostRef.current)
         fit.fit()
         term.focus()
-        const emu = new window.V86({
-          wasm_path: '/v86/v86.wasm',
-          bios: { url: '/v86/bios/seabios.bin' },
-          vga_bios: { url: '/v86/bios/vgabios.bin' },
-          bzimage: { url: '/v86/images/buildroot-bzimage68.bin' },
-          cmdline: 'console=ttyS0 tsc=reliable mitigations=off random.trust_cpu=on',
-          autostart: true,
-          memory_size: 128 * 1024 * 1024,
-          vga_memory_size: 8 * 1024 * 1024,
-          disable_speaker: true,
-          disable_mouse: true,
-          disable_keyboard: true,
-          enable_rtl8139: true,
-        })
-        dataDisposableRef.current = term.onData((data) => {
-          emu.serial0_send(data)
-        })
-        emu.add_listener('serial0-output-byte', (byte) => {
-          term.write(Uint8Array.of(byte))
-        })
+        if (existingEmu) {
+          dataDisposableRef.current = term.onData((data) => {
+            existingEmu.serial0_send(data)
+          })
+          existingEmu.add_listener('serial0-output-byte', (byte) => {
+            term.write(Uint8Array.of(byte))
+          })
+          emulatorRef.current = existingEmu
+          setStatus('')
+          existingEmu.serial0_send('\r')
+        } else {
+          const emu = new window.V86({
+            wasm_path: '/v86/v86.wasm',
+            bios: { url: '/v86/bios/seabios.bin' },
+            vga_bios: { url: '/v86/bios/vgabios.bin' },
+            bzimage: { url: '/v86/images/buildroot-bzimage68.bin' },
+            cmdline: 'console=ttyS0 tsc=reliable mitigations=off random.trust_cpu=on',
+            autostart: true,
+            memory_size: 128 * 1024 * 1024,
+            vga_memory_size: 8 * 1024 * 1024,
+            disable_speaker: true,
+            disable_mouse: true,
+            disable_keyboard: true,
+            enable_rtl8139: true,
+          })
+          emu.add_listener('ready', () => {
+            setStatus('')
+          })
+          dataDisposableRef.current = term.onData((data) => {
+            emu.serial0_send(data)
+          })
+          emu.add_listener('serial0-output-byte', (byte) => {
+            term.write(Uint8Array.of(byte))
+          })
+          emulatorRef.current = emu
+          setGlobalEmulator(emu, term)
+        }
         const onResize = () => fit.fit()
         window.addEventListener('resize', onResize)
         resizeHandlerRef.current = onResize
-        const resizeObserver = new ResizeObserver(() => {
-          fit.fit()
-        })
+        const resizeObserver = new ResizeObserver(() => fit.fit())
         resizeObserver.observe(hostRef.current)
         resizeObserverRef.current = resizeObserver
-        
-        emulatorRef.current = emu
         termRef.current = term
         fitRef.current = fit
-        setStatus('')
       } catch (error) {
         setStatus(`Failed to load emulator: ${error.message}`)
       }
@@ -125,7 +148,6 @@ export default function Terminal() {
       }
       dataDisposableRef.current?.dispose?.()
       dataDisposableRef.current = null
-      emulatorRef.current?.destroy?.()
       emulatorRef.current = null
       termRef.current?.dispose?.()
       termRef.current = null
@@ -141,18 +163,18 @@ export default function Terminal() {
   }, [])
 
   return (
-  <div style={{ 
-    height: '100%', 
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: '#0c0c0c', 
-    color: '#ccc', 
-    overflow: 'hidden',
-    boxSizing: 'border-box'
-  }}>
-    {status && <div style={{ marginBottom: 8, paddingLeft: 8, paddingRight: 8 }}>{status}</div>}
-    <div ref={hostRef} style={{ flex: 1, width: '100%', overflow: 'hidden' }} />
-  </div>
-)
+    <div style={{ 
+      height: '100%', 
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      background: '#0c0c0c', 
+      color: '#ccc', 
+      overflow: 'hidden',
+      boxSizing: 'border-box'
+    }}>
+      {status && <div style={{ marginBottom: 8, paddingLeft: 8, paddingRight: 8 }}>{status}</div>}
+      <div ref={hostRef} style={{ flex: 1, width: '100%', overflow: 'hidden' }} />
+    </div>
+  )
 }

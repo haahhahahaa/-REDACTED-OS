@@ -442,7 +442,6 @@ export default function FileExplorer() {
                                        style={{ width: '100%', height: '100%', background: '#000' }}
                                     />
                                  )}
-
                                  {selectedFile.type === 'music' && (
                                     <div style={{ padding: 16 }}>
                                        <audio
@@ -457,11 +456,9 @@ export default function FileExplorer() {
                         )}
                    </div>
                )}
-
             </div>
          </div>
       </div>
-
     </div>
   )
 }
