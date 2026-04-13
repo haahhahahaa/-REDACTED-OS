@@ -2,7 +2,6 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlencode, urlparse, quote
 from urllib.request import Request, urlopen
 import json
-import yt_dlp
 
 class handler(BaseHTTPRequestHandler):
     def _set_cors_headers(self):
@@ -67,19 +66,15 @@ class handler(BaseHTTPRequestHandler):
             
         if video_id:
             try:
-                ydl_opts = {
-                    "format": "bestaudio",
-                    "quiet": True,
-                    "no_warnings": True,
-                    "noplaylist": True,
-                }
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(
-                        f"https://www.youtube.com/watch?v={video_id}",
-                        download=False,
-                    )
-                stream_url = info.get("url") if isinstance(info, dict) else None
-                title = info.get("title") if isinstance(info, dict) else None
+                req = Request(f"https://yt.omada.cafe/api/v1/videos/{video_id}", headers={"User-Agent": "Mozilla/5.0"})
+                with urlopen(req, timeout=20) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                title = data.get("title")
+                formats = data.get("adaptiveFormats", [])
+                stream_url = None
+                if formats:
+                    formats.sort(key=lambda x: x.get("bitrate", 0), reverse=True)
+                    stream_url = formats[0]["url"]
                 if stream_url:
                     self._send_json(200, {"video_id": video_id, "title": title, "url": stream_url})
                 else:
