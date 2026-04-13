@@ -181,7 +181,7 @@ const MusicPlayer = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/api?q=${encodeURIComponent(searchQuery)}`);
+      const response = await fetch(`/api/api?q=${encodeURIComponent(searchQuery)}`);
       const json = await response.json();
       if (!response.ok) {
         throw new Error('Search failed');
@@ -232,7 +232,7 @@ const MusicPlayer = () => {
       playbackSnapshotRef.current = { time: 0, wasPlaying: false, volume, url: '' };
       setCurrentTime(0);
       setDuration(0);
-      const streamResponse = await fetch(`http://127.0.0.1:5000/api/api?v=${encodeURIComponent(track.videoId)}`);
+      const streamResponse = await fetch(`/api/api?v=${encodeURIComponent(track.videoId)}`);
       if (!streamResponse.ok) {
         throw new Error(`Stream API error: ${streamResponse.status}`);
       }
