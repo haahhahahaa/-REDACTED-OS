@@ -181,7 +181,7 @@ const MusicPlayer = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/api?q=${encodeURIComponent(searchQuery)}`);
+      const response = await fetch(`http://127.0.0.1:5000/api/api?q=${encodeURIComponent(searchQuery)}`);
       const json = await response.json();
       if (!response.ok) {
         throw new Error('Search failed');
@@ -232,16 +232,18 @@ const MusicPlayer = () => {
       playbackSnapshotRef.current = { time: 0, wasPlaying: false, volume, url: '' };
       setCurrentTime(0);
       setDuration(0);
-      const proxyResponse = await fetch(`/api/api?v=${track.videoId}`);
-      if (!proxyResponse.ok) {
-        throw new Error(`Proxy error: ${proxyResponse.status}`);
+      const streamResponse = await fetch(`http://127.0.0.1:5000/api/api?v=${encodeURIComponent(track.videoId)}`);
+      if (!streamResponse.ok) {
+        throw new Error(`Stream API error: ${streamResponse.status}`);
       }
-      const proxyData = await proxyResponse.json();
-      if (!proxyData.url) {
-        throw new Error('No audio URL returned from proxy');
+      const streamData = await streamResponse.json();
+      if (!streamData?.success || !Array.isArray(streamData?.streamingUrls) || streamData.streamingUrls.length === 0) {
+        throw new Error('No streaming URLs returned');
       }
-      const candidates = proxyData.urls && proxyData.urls.length > 0 ? proxyData.urls : [proxyData.url];
-      const metaCover = getBestThumbnail(track);
+      const candidates = streamData.streamingUrls
+        .map((s) => s?.url)
+        .filter(Boolean);
+      const metaCover = streamData?.metadata?.thumbnail || getBestThumbnail(track);
       setCurrentTrack(track);
       setCurrentCoverUrl(metaCover || getBestThumbnail(track));
       setAudioCandidates(candidates);

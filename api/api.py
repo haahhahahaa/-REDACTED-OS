@@ -96,31 +96,11 @@ class handler(BaseHTTPRequestHandler):
             
         if video_id:
             try:
-                req = Request(f"https://yt.omada.cafe/api/v1/videos/{video_id}", headers={"User-Agent": "Mozilla/5.0"})
+                upstream_url = f"https://verome-api.deno.dev/api/stream?id={quote(video_id, safe='')}"
+                req = Request(upstream_url, headers={"User-Agent": "Mozilla/5.0"})
                 with urlopen(req, timeout=20) as resp:
-                    data = json.loads(resp.read().decode("utf-8"))
-                title = data.get("title")
-                formats = data.get("adaptiveFormats") or data.get("formats") or []
-                audio_urls = []
-                for fmt in formats:
-                    url = fmt.get("url")
-                    mime_type = (fmt.get("mimeType") or fmt.get("mime_type") or "").lower()
-                    if not url:
-                        continue
-                    if ("audio" in mime_type) or ("googlevideo.com" in url):
-                        if url not in audio_urls:
-                            audio_urls.append(url)
-                if audio_urls:
-                    proxied_urls = [f"/api/api?stream={quote(url, safe=':/?&#=')}" for url in audio_urls]
-                    self._send_json(200, {
-                        "video_id": video_id,
-                        "title": title,
-                        "url": proxied_urls[0],
-                        "urls": proxied_urls,
-                        "raw_urls": audio_urls,
-                    })
-                else:
-                    self._send_json(404, {"error": "No audio URL found"})
+                    stream_data = json.loads(resp.read().decode("utf-8"))
+                self._send_json(200, stream_data)
                 return
             except Exception as error:
                 self._send_json(500, {"error": str(error)})
