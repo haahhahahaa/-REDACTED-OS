@@ -27,6 +27,35 @@ class handler(BaseHTTPRequestHandler):
         search_query = (query.get("q", [""])[0] or "").strip()
         search_filter = (query.get("f", [""])[0] or "").strip()
         video_id = (query.get("v", [""])[0] or "").strip()
+        stream_url = (query.get("stream", [""])[0] or "").strip()
+
+        if stream_url:
+            if not stream_url.startswith("http"):
+                self._send_json(400, {"error": "Invalid stream URL"})
+                return
+            try:
+                upstream_headers = {"User-Agent": "Mozilla/5.0"}
+                range_header = self.headers.get("Range")
+                if range_header:
+                    upstream_headers["Range"] = range_header
+                req = Request(stream_url, headers=upstream_headers)
+                with urlopen(req, timeout=30) as resp:
+                    self.send_response(resp.status)
+                    self._set_cors_headers()
+                    for header_name in ["Content-Type", "Content-Length", "Content-Range", "Accept-Ranges", "Cache-Control"]:
+                        header_value = resp.headers.get(header_name)
+                        if header_value:
+                            self.send_header(header_name, header_value)
+                    self.end_headers()
+                    while True:
+                        chunk = resp.read(64 * 1024)
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
+                return
+            except Exception as error:
+                self._send_json(502, {"error": "Stream proxy failed", "details": str(error)})
+                return
 
         if browser_url:
             try:
@@ -81,11 +110,13 @@ class handler(BaseHTTPRequestHandler):
                         if url not in audio_urls:
                             audio_urls.append(url)
                 if audio_urls:
+                    proxied_urls = [f"/api/api?stream={quote(url, safe='')}" for url in audio_urls]
                     self._send_json(200, {
                         "video_id": video_id,
                         "title": title,
-                        "url": audio_urls[0],
-                        "urls": audio_urls,
+                        "url": proxied_urls[0],
+                        "urls": proxied_urls,
+                        "raw_urls": audio_urls,
                     })
                 else:
                     self._send_json(404, {"error": "No audio URL found"})
