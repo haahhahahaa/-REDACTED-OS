@@ -1,6 +1,5 @@
 import { createContext, useContext, useMemo, useState, useEffect, useRef } from 'react';
 
-// Initialize global volume state
 window.__appVolumes = window.__appVolumes || {
   gains: new Set(),
   elements: new Set(),
@@ -9,13 +8,10 @@ window.__appVolumes = window.__appVolumes || {
 
 if (!window.__audioPatched && typeof window !== 'undefined') {
   window.__audioPatched = true;
-
-  // Intercept Web Audio API connections to master destination
   if (typeof AudioNode !== 'undefined') {
     const originalConnect = AudioNode.prototype.connect;
     AudioNode.prototype.connect = function() {
       const dest = arguments[0];
-      // When connecting to output (AudioDestinationNode), route through our master gain
       if (dest && typeof AudioDestinationNode !== 'undefined' && dest instanceof AudioDestinationNode) {
         const ctx = dest.context;
         if (!ctx.__masterGain) {
@@ -24,14 +20,11 @@ if (!window.__audioPatched && typeof window !== 'undefined') {
           originalConnect.call(ctx.__masterGain, dest);
           window.__appVolumes.gains.add(ctx.__masterGain);
         }
-        // Substitute destination with master gain
         arguments[0] = ctx.__masterGain;
       }
       return originalConnect.apply(this, arguments);
     };
   }
-
-  // Intercept HTMLMediaElement (audio/video tags)
   if (typeof HTMLMediaElement !== 'undefined') {
     const volumeDescr = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume');
     if (volumeDescr) {
@@ -54,19 +47,17 @@ if (!window.__audioPatched && typeof window !== 'undefined') {
     HTMLMediaElement.prototype.play = function() {
       if (this.__originalVolume === undefined) {
         window.__appVolumes.elements.add(this);
-        this.volume = this.volume; // triggers our setter
+        this.volume = this.volume; 
       }
       return originalPlay.apply(this, arguments);
     };
   }
 }
 
-// Add message listener for iframe syncing
 if (typeof window !== 'undefined') {
   window.addEventListener('message', (e) => {
     if (e.data && e.data.type === 'SYNC_VOLUME_REQUEST') {
       window.__appVolumes.value = e.data.volume;
-      // Triggers update for any elements/gains without reacting through React state if needed
     }
   });
 }
@@ -104,7 +95,7 @@ const defaultThemes = {
       '--theme-taskbar-border': 'rgba(255, 255, 255, 0.08)',
       '--theme-taskbar-text': '#eaf1ff',
       '--theme-taskbar-bg': 'rgba(10, 12, 16, 0.85)',
-      '--desktop-bg': "url('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?auto=format&fit=crop&w=3840&q=100')",
+      '--desktop-bg': "url('https://wsrv.nl/?url=https://images.unsplash.com/photo-1477346611705-65d1883cee1e?auto=format&fit=crop&w=3840&q=100')",
     }
   },
   light: {
@@ -130,7 +121,7 @@ const defaultThemes = {
       '--theme-taskbar-border': 'rgba(0, 0, 0, 0.1)',
       '--theme-taskbar-text': '#1a1a1a',
       '--theme-taskbar-bg': 'rgba(245, 245, 245, 0.85)',
-      '--desktop-bg': "url('https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&w=3840&q=100')",
+      '--desktop-bg': "url('https://wsrv.nl/?url=https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&w=3840&q=100')",
     }
   },
   blue: {
@@ -156,7 +147,7 @@ const defaultThemes = {
       '--theme-taskbar-border': 'rgba(255, 255, 255, 0.1)',
       '--theme-taskbar-text': '#f8fafc',
       '--theme-taskbar-bg': 'rgba(11, 15, 25, 0.85)',
-      '--desktop-bg': "url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=3840&q=100')",
+      '--desktop-bg': "url('https://wsrv.nl/?url=https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=3840&q=100')",
     }
   },
   purple: {
@@ -182,7 +173,7 @@ const defaultThemes = {
       '--theme-taskbar-border': 'rgba(255, 255, 255, 0.1)',
       '--theme-taskbar-text': '#faf5ff',
       '--theme-taskbar-bg': 'rgba(20, 10, 30, 0.85)',
-      '--desktop-bg': "url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&w=3840&q=100')",
+      '--desktop-bg': "url('https://wsrv.nl/?url=https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&w=3840&q=100')",
     }
   }
 };
@@ -196,7 +187,7 @@ const toCssUrl = (value) => {
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState({
     name: '[REDACTED]',
-    avatar: 'https://avatars.githubusercontent.com/u/189115938?v=4&size=64',
+    avatar: 'https://wsrv.nl/?url=https://avatars.githubusercontent.com/u/189115938?v=4&size=64',
     email: 'me@redac.me',
     accountType: 'Local Account'
   });
@@ -245,7 +236,6 @@ export const UserProvider = ({ children }) => {
     localStorage.setItem(STORAGE_KEYS.NIGHT_LIGHT, String(nightLight));
   }, [nightLight]);
   useEffect(() => {
-    // Local dummy context for anything explicitly connected
     if (!audioCtxRef.current) {
       audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
       masterGainRef.current = audioCtxRef.current.createGain();
@@ -254,35 +244,27 @@ export const UserProvider = ({ children }) => {
     if (masterGainRef.current) {
       masterGainRef.current.gain.value = volume / 100;
     }
-    
-    // Global tracking update
     window.__appVolumes.value = volume;
     window.__appVolumes.gains.forEach(gain => {
       try {
         if (gain.context && gain.context.state !== 'closed') {
-          // Some custom gain nodes might need to be smoothly transitioned
           gain.gain.setTargetAtTime(volume / 100, gain.context.currentTime, 0.01);
         }
       } catch (e) {
         window.__appVolumes.gains.delete(gain);
       }
     });
-
     window.__appVolumes.elements.forEach(el => {
       try {
         if (document.body.contains(el)) {
-          // Re-trigger our setter with its original volume
           el.volume = el.__originalVolume !== undefined ? el.__originalVolume : 1;
         } else {
            window.__appVolumes.elements.delete(el);
         }
       } catch (e) {}
     });
-
-    // Notify any same-origin iframes
     document.querySelectorAll('iframe').forEach(iframe => {
       try {
-        // Send a message via postMessage and also try setting their volume array if same origin
         iframe.contentWindow.postMessage({ type: 'OS_VOLUME_CHANGE', volume: volume }, '*');
         if (iframe.contentWindow && iframe.contentWindow.__appVolumes) {
           iframe.contentWindow.__appVolumes.value = volume;
@@ -293,9 +275,8 @@ export const UserProvider = ({ children }) => {
             try { el.volume = el.__originalVolume !== undefined ? el.__originalVolume : 1; } catch {}
           });
         }
-      } catch (e) {} // Cross-origin block
+      } catch (e) {} 
     });
-
   }, [volume]);
   useEffect(() => {
     const filter = [];

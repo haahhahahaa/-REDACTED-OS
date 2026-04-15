@@ -95,17 +95,44 @@ class handler(BaseHTTPRequestHandler):
                 return
             
         if video_id:
-            try:
-                upstream_url = f"https://verome-api.deno.dev/api/stream?id={quote(video_id, safe='')}"
-                req = Request(upstream_url, headers={"User-Agent": "Mozilla/5.0"})
-                with urlopen(req, timeout=20) as resp:
-                    stream_data = json.loads(resp.read().decode("utf-8"))
-                self._send_json(200, stream_data)
-                return
-            except Exception as error:
-                self._send_json(500, {"error": str(error)})
-                return
-
+            providers = ["ytify.pp.ua", "lekker.gay", "yt.omada.cafe"]
+            last_error = "No providers attempted"
+            for provider in providers:
+                try:
+                    upstream_url = f"https://{provider}/api/v1/videos/{quote(video_id, safe='')}"
+                    req = Request(upstream_url, headers={"User-Agent": "Mozilla/5.0"})       
+                    with urlopen(req, timeout=10) as resp:
+                        data = json.loads(resp.read().decode("utf-8"))
+                    streaming_urls = []
+                    adaptive = data.get("adaptiveFormats") or []
+                    standard = data.get("formatStreams") or []
+                    formats = adaptive + standard
+                    for fmt in formats:
+                        fmt_type = fmt.get("type", "")
+                        if fmt_type.startswith("audio/") or not fmt.get("resolution"):       
+                            url = fmt.get("url", "")
+                            if url:
+                                streaming_urls.append({"url": url})
+                    if not streaming_urls:
+                        last_error = f"{provider} returned no audio streams"
+                        continue
+                    thumbnails = data.get("videoThumbnails") or []
+                    stream_data = {
+                        "success": True,
+                        "streamingUrls": streaming_urls,
+                        "metadata": {
+                            "thumbnail": thumbnails[0].get("url") if thumbnails else None,   
+                            "title": data.get("title")
+                        }
+                    }
+                    self._send_json(200, stream_data)
+                    return
+                except Exception as error:
+                    last_error = f"{provider} failed: {str(error)}"
+                    continue
+            self._send_json(502, {"error": "All playback providers failed", "details": last_error})
+            return
+        
         self._send_json(
             400,
             {

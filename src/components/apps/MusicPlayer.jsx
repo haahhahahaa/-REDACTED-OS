@@ -1,10 +1,216 @@
-import { useEffect, useRef, useState } from 'react';
-import { Search, Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle, X, Maximize2 } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { Search, Play, Pause, SkipBack, SkipForward, Volume2, Repeat, Shuffle, X, Maximize2, Clock3 } from 'lucide-react';
+import { useUser } from '../../contexts/UserContext';
 import '../components.css';
 
+const LiveAudioVisualizer = ({
+  audioElement,
+  width = "100%",
+  height = "100%",
+  barWidth = 2,
+  gap = 1,
+  backgroundColor = "transparent",
+  barColor,
+  fftSize = 1024,
+  maxDecibels = -10,
+  minDecibels = -90,
+  smoothingTimeConstant = 0.4,
+}) => {
+  const [context, setContext] = useState();
+  const [audioSource, setAudioSource] = useState();
+  const [analyser, setAnalyser] = useState();
+  const canvasRef = useRef(null);
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    if (!audioElement) return;
+    if (audioElement._audioContext) {
+      setContext(audioElement._audioContext);
+      setAnalyser(audioElement._analyserNode);
+      setAudioSource(audioElement._audioSource);
+      return;
+    }
+    const ctx = new AudioContext();
+    const analyserNode = ctx.createAnalyser();
+    analyserNode.fftSize = fftSize;
+    analyserNode.minDecibels = minDecibels;
+    analyserNode.maxDecibels = maxDecibels;
+    analyserNode.smoothingTimeConstant = smoothingTimeConstant;
+    try {
+      const source = ctx.createMediaElementSource(audioElement);
+      source.connect(analyserNode);
+      analyserNode.connect(ctx.destination);
+      audioElement._audioContext = ctx;
+      audioElement._analyserNode = analyserNode;
+      audioElement._audioSource = source;
+      setContext(ctx);
+      setAnalyser(analyserNode);
+      setAudioSource(source);
+    } catch (e) {
+      console.error('Failed to create audio context:', e);
+    }
+    return () => {};
+  }, [audioElement, fftSize, minDecibels, maxDecibels, smoothingTimeConstant]);
+  const report = useCallback(() => {
+    if (!analyser || !context || !audioElement || audioElement.paused) return;
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+    processFrequencyData(data);
+    rafRef.current = requestAnimationFrame(report);
+  }, [analyser, context, audioElement]);
+  useEffect(() => {
+    if (!analyser || !audioElement) return;
+    const start = async () => {
+      try {
+        if (context?.state === 'suspended') {
+          await context.resume();
+        }
+      } catch {}
+      report();
+    };
+    const stop = () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+    audioElement.addEventListener('play', start);
+    audioElement.addEventListener('pause', stop);
+    audioElement.addEventListener('ended', stop);
+    if (!audioElement.paused) {
+      start();
+    }
+    return () => {
+      audioElement.removeEventListener('play', start);
+      audioElement.removeEventListener('pause', stop);
+      audioElement.removeEventListener('ended', stop);
+      stop();
+    };
+  }, [analyser, context, audioElement, report]);
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, []);
+  const processFrequencyData = (data) => {
+    if (!canvasRef.current) return;
+    const dataPoints = calculateBarData(
+      data,
+      canvasRef.current.width,
+      barWidth,
+      gap
+    );
+    draw(
+      dataPoints,
+      canvasRef.current,
+      barWidth,
+      gap,
+      backgroundColor,
+      barColor
+    );
+  };
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      style={{
+        width: "100%",
+        height: "100%",
+        aspectRatio: "unset",
+      }}
+    />
+  );
+};
+
+const calculateBarData = (
+  frequencyData,
+  width,
+  barWidth,
+  gap
+) => {
+  let units = width / (barWidth + gap);
+  units = Math.max(18, Math.floor(units * 0.45));
+  let step = Math.floor(frequencyData.length / units);
+  if (units > frequencyData.length) {
+    units = frequencyData.length;
+    step = 1;
+  }
+  const data = [];
+  for (let i = 0; i < units; i++) {
+    let sum = 0;
+    for (let j = 0; j < step && i * step + j < frequencyData.length; j++) {
+      sum += frequencyData[i * step + j];
+    }
+    data.push(sum / step);
+  }
+  return data;
+};
+const draw = (
+  data,
+  canvas,
+  barWidth,
+  gap,
+  backgroundColor,
+  barColor
+) => {
+  const centerY = canvas.height * 0.6;
+  const maxBarHeight = Math.min(canvas.height * 0.8, 400);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (backgroundColor !== "transparent") {
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  const totalWidth = data.length * (barWidth + gap) - gap;
+  const startX = (canvas.width - totalWidth) / 2;
+  data.forEach((dp, i) => {
+    ctx.fillStyle = barColor;
+    const x = startX + i * (barWidth + gap);
+    const center = data.length / 2;
+    let sourceIndex = i;
+    if (i >= center) {
+      sourceIndex = Math.floor(data.length - 1 - i);
+    }
+    let barHeight = Math.min(data[sourceIndex] * 0.7, maxBarHeight);
+    const distance = Math.abs(i - center);
+    const maxDist = center;
+    const normalizedDist = distance / maxDist;
+    const factor = 0.3 + 0.7 * (1 - normalizedDist * normalizedDist);
+    barHeight *= factor;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(x, centerY - barHeight, barWidth, barHeight, Math.min(barWidth, barHeight) / 2);
+      ctx.fill();
+    } else {
+      ctx.fillRect(x, centerY - barHeight, barWidth, barHeight);
+    }
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(x, centerY, barWidth, barHeight, Math.min(barWidth, barHeight) / 2);
+      ctx.fill();
+    } else {
+      ctx.fillRect(x, centerY, barWidth, barHeight);
+    }
+  });
+};
+
 const MusicPlayer = () => {
+  const SEARCH_HISTORY_KEY = 'mp-search-history-v1';
+  const MAX_SEARCH_HISTORY = 8;
+  const { currentColors } = useUser();
+  const accentColor = currentColors?.['--theme-accent-color'] || '#60a5fa';
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentTrack, setCurrentTrack] = useState(null);
@@ -13,20 +219,15 @@ const MusicPlayer = () => {
   const [audioCandidates, setAudioCandidates] = useState([]);
   const [audioCandidateIndex, setAudioCandidateIndex] = useState(0);
   const [isPlayerExpanded, setIsPlayerExpanded] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [playLoadingId, setPlayLoadingId] = useState(null);
   const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
-  const [vizLevels, setVizLevels] = useState(Array(40).fill(0.05));
+  const [isRepeatEnabled, setIsRepeatEnabled] = useState(false);
+  const searchUiRef = useRef(null);
   const audioRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const analyserRef = useRef(null);
-  const sourceRef = useRef(null);
-  const sourceElementRef = useRef(null);
-  const animationFrameRef = useRef(null);
   const playbackSnapshotRef = useRef({ time: 0, wasPlaying: false, volume: 1, url: '' });
   const shouldRestorePlaybackRef = useRef(false);
   const isCompactPlayer = viewportWidth < 980;
@@ -47,6 +248,36 @@ const MusicPlayer = () => {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SEARCH_HISTORY_KEY);
+      if (!saved) return;
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        setSearchHistory(
+          parsed
+            .filter((value) => typeof value === 'string')
+            .map((value) => value.trim())
+            .filter(Boolean)
+            .slice(0, MAX_SEARCH_HISTORY)
+        );
+      }
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(searchHistory));
+    } catch {}
+  }, [searchHistory]);
+  useEffect(() => {
+    const handleOutside = (event) => {
+      if (!searchUiRef.current?.contains(event.target)) {
+        setIsSearchDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, []);
   const toWsrvImage = (url, width = 480, height = 480) => {
     if (!url) return '';
     if (String(url).includes('wsrv.nl/')) return url;
@@ -65,72 +296,78 @@ const MusicPlayer = () => {
     const s = Math.floor(secs % 60);
     return `${m}:${String(s).padStart(2, '0')}`;
   };
+  const saveSearchHistory = useCallback((term) => {
+    const clean = String(term || '').trim();
+    if (!clean) return;
+    setSearchHistory((prev) => {
+      const next = [
+        clean,
+        ...prev.filter((entry) => entry.toLowerCase() !== clean.toLowerCase())
+      ].slice(0, MAX_SEARCH_HISTORY);
+      return next;
+    });
+  }, []);
+  const clearSearchHistory = useCallback(() => {
+    setSearchHistory([]);
+  }, []);
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !currentAudioUrl) return;
-    let mediaUrlOrigin = '';
-    try {
-      mediaUrlOrigin = new URL(currentAudioUrl, window.location.origin).origin;
-    } catch {
-      mediaUrlOrigin = '';
-    }
-    if (mediaUrlOrigin && mediaUrlOrigin !== window.location.origin) {
-      setVizLevels((prev) => prev.map((_, i) => 0.15 + ((i % 7) * 0.03)));
+    const q = query.trim();
+    if (!q) {
+      setSuggestions([]);
+      setIsFetchingSuggestions(false);
       return;
     }
-    const initAudioVisualizer = async () => {
+
+    let cancelled = false;
+    const timeoutId = setTimeout(async () => {
       try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        if (!audioContextRef.current) {
-          audioContextRef.current = new AudioCtx();
+        setIsFetchingSuggestions(true);
+        const response = await fetch(`https://verome-api.deno.dev/api/search/suggestions?q=${encodeURIComponent(q)}`);
+        if (!response.ok) throw new Error('Suggestion fetch failed');
+        const payload = await response.json();
+
+        const source = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.suggestions)
+            ? payload.suggestions
+            : Array.isArray(payload?.data)
+              ? payload.data
+              : Array.isArray(payload?.items)
+                ? payload.items
+                : [];
+        const normalized = source
+          .map((item) => {
+            if (typeof item === 'string') return item;
+            if (!item || typeof item !== 'object') return '';
+            return item.query || item.text || item.title || item.value || item.suggestion || item.name || '';
+          })
+          .map((value) => String(value || '').trim())
+          .filter(Boolean);
+        const seen = new Set();
+        const unique = normalized.filter((value) => {
+          const key = value.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        if (!cancelled) {
+          setSuggestions(unique.slice(0, 8));
         }
-        const audioContext = audioContextRef.current;
-        if (audioContext.state === 'suspended') {
-          await audioContext.resume();
+      } catch {
+        if (!cancelled) {
+          setSuggestions([]);
         }
-        if (!analyserRef.current) {
-          analyserRef.current = audioContext.createAnalyser();
-          analyserRef.current.fftSize = 128;
-          analyserRef.current.smoothingTimeConstant = 0.82;
-          analyserRef.current.connect(audioContext.destination);
+      } finally {
+        if (!cancelled) {
+          setIsFetchingSuggestions(false);
         }
-        if (sourceElementRef.current !== audio) {
-          if (sourceRef.current) {
-            try {
-              sourceRef.current.disconnect();
-            } catch {}
-          }
-          sourceRef.current = audioContext.createMediaElementSource(audio);
-          sourceElementRef.current = audio;
-          sourceRef.current.connect(analyserRef.current);
-        }
-        const analyser = analyserRef.current;
-        const data = new Uint8Array(analyser.frequencyBinCount);
-        const animate = () => {
-          analyser.getByteFrequencyData(data);
-          const next = Array.from({ length: 40 }, (_, i) => {
-            const idx = Math.floor((i / 40) * data.length);
-            return Math.max(0.05, data[idx] / 255);
-          });
-          setVizLevels(next);
-          animationFrameRef.current = requestAnimationFrame(animate);
-        };
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-        }
-        animate();
-      } catch (e) {
-        console.error('Visualizer init failed:', e);
       }
-    };
-    initAudioVisualizer();
+    }, 220);
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      cancelled = true;
+      clearTimeout(timeoutId);
     };
-  }, [currentAudioUrl, isPlayerExpanded, isFullscreen]);
+  }, [query]);
   useEffect(() => {
     if (!audioRef.current || !currentAudioUrl) return;
     const audio = audioRef.current;
@@ -146,6 +383,10 @@ const MusicPlayer = () => {
     if (!audioRef.current) return;
     audioRef.current.volume = volume;
   }, [volume]);
+  useEffect(() => {
+    if (!audioRef.current) return;
+    audioRef.current.loop = isRepeatEnabled;
+  }, [isRepeatEnabled]);
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentAudioUrl) return;
@@ -175,13 +416,14 @@ const MusicPlayer = () => {
     return () => {
       audio.removeEventListener('loadedmetadata', onLoaded);
     };
-  }, [isPlayerExpanded, isFullscreen, currentAudioUrl, volume]);
+  }, [currentAudioUrl, volume]);
   const searchSongs = async (searchQuery) => {
     if (!searchQuery) return;
     setLoading(true);
+    setResults([]);
     setError(null);
     try {
-      const response = await fetch(`/api/api?q=${encodeURIComponent(searchQuery)}`);
+      const response = await fetch(`http://127.0.0.1:5000/api/api?q=${encodeURIComponent(searchQuery)}`);
       const json = await response.json();
       if (!response.ok) {
         throw new Error('Search failed');
@@ -222,7 +464,20 @@ const MusicPlayer = () => {
   };
   const handleSearch = (e) => {
     e.preventDefault();
-    searchSongs(query);
+    const cleanQuery = query.trim();
+    if (!cleanQuery) return;
+    saveSearchHistory(cleanQuery);
+    setQuery(cleanQuery);
+    setIsSearchDropdownOpen(false);
+    searchSongs(cleanQuery);
+  };
+  const handleSearchSuggestion = (value) => {
+    const cleanValue = String(value || '').trim();
+    if (!cleanValue) return;
+    setQuery(cleanValue);
+    saveSearchHistory(cleanValue);
+    setIsSearchDropdownOpen(false);
+    searchSongs(cleanValue);
   };
   const playTrack = async (track) => {
     try {
@@ -242,7 +497,8 @@ const MusicPlayer = () => {
       }
       const candidates = streamData.streamingUrls
         .map((s) => s?.url)
-        .filter(Boolean);
+        .filter(Boolean)
+        .map(url => `/api/api?stream=${encodeURIComponent(url)}`);
       const metaCover = streamData?.metadata?.thumbnail || getBestThumbnail(track);
       setCurrentTrack(track);
       setCurrentCoverUrl(metaCover || getBestThumbnail(track));
@@ -260,101 +516,137 @@ const MusicPlayer = () => {
 
   return (
     <div className="music-player-container mp-container">
-      <form onSubmit={handleSearch} className="mp-search-form">
-        <input
-          id="saavn-search-box"
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search for songs..."
-          className="mp-search-input"
-        />
+      <form onSubmit={handleSearch} className="mp-search-form" ref={searchUiRef}>
+        <div className="mp-search-wrap">
+          <input
+            id="saavn-search-box"
+            type="text"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setIsSearchDropdownOpen(true);
+            }}
+            onFocus={() => setIsSearchDropdownOpen(true)}
+            placeholder="Search for songs..."
+            className="mp-search-input"
+            autoComplete="off"
+          />
+          {isSearchDropdownOpen && (
+            <div className="mp-search-dropdown">
+              {query.trim() ? (
+                <>
+                  {isFetchingSuggestions && <div className="mp-search-hint">Loading suggestions...</div>}
+                  {!isFetchingSuggestions && suggestions.length === 0 && (
+                    <div className="mp-search-hint">No suggestions found</div>
+                  )}
+                  {suggestions.map((item) => (
+                    <button
+                      type="button"
+                      key={`suggestion-${item}`}
+                      className="mp-search-item"
+                      onClick={() => handleSearchSuggestion(item)}
+                    >
+                      <Search size={14} />
+                      <span>{item}</span>
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <div className="mp-search-head">
+                    <span>Recent searches</span>
+                    {searchHistory.length > 0 && (
+                      <button type="button" className="mp-search-clear" onClick={clearSearchHistory}>
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  {searchHistory.length === 0 && (
+                    <div className="mp-search-hint">No search history yet</div>
+                  )}
+                  {searchHistory.map((item) => (
+                    <button
+                      type="button"
+                      key={`history-${item}`}
+                      className="mp-search-item"
+                      onClick={() => handleSearchSuggestion(item)}
+                    >
+                      <span className="mp-search-item-clock"><Clock3 size={14} /></span>
+                      <span>{item}</span>
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+        </div>
         <button type="submit" className="mp-search-btn">
           <Search size={16} /> Search
         </button>
       </form>
       {error && <div className="mp-error">Error: {error}</div>}
-      <div id="saavn-results" className="mp-results">
-        {results.map((track) => {
-          return (
-          <div 
-            key={track.videoId} 
-            className="song-container mp-song-card" 
-            onClick={() => playLoadingId !== track.videoId && playTrack(track)}
-            data-loading={playLoadingId === track.videoId ? '1' : '0'}
-          >
-            {playLoadingId === track.videoId && (
-              <div className="mp-song-loading">
-                ⏳ Loading...
-              </div>
-            )}
-            <div className="mp-thumb-wrap">
-              <img 
-                src={toWsrvImage(getBestThumbnail(track), 260, 146) || getBestThumbnail(track) || fallbackCover(track.title)}
-                data-raw-src={getBestThumbnail(track) || ''}
-                alt={track.title} 
-                className="mp-thumb"
-              />
-              {track.durationText && (
-                <span className="mp-duration">
-                  {track.durationText}
-                </span>
+      {loading ? (
+        <div className="mp-loading" aria-label="Loading search results" role="status">
+          <div className="mp-loading-spinner" />
+        </div>
+      ) : (
+        <div id="saavn-results" className="mp-results">
+          {results.map((track) => {
+            return (
+            <div 
+              key={track.videoId} 
+              className="song-container mp-song-card" 
+              onClick={() => playLoadingId !== track.videoId && playTrack(track)}
+              data-loading={playLoadingId === track.videoId ? '1' : '0'}
+            >
+              {playLoadingId === track.videoId && (
+                <div className="mp-song-loading">
+                  ⏳ Loading...
+                </div>
               )}
-            </div>
-            <div className="mp-song-info">
-              <h4 className="mp-song-title">
-                {track.title || 'Untitled'}
-              </h4>
-              <div className="mp-song-artist">
-                {track.artists && track.artists.length > 0 ? track.artists.map(a => a.name).join(', ') : 'Unknown Artist'}
+              <div className="mp-thumb-wrap">
+                <img 
+                  src={toWsrvImage(getBestThumbnail(track), 260, 146) || getBestThumbnail(track) || fallbackCover(track.title)}
+                  data-raw-src={getBestThumbnail(track) || ''}
+                  alt={track.title} 
+                  className="mp-thumb"
+                />
+                {track.durationText && (
+                  <span className="mp-duration">
+                    {track.durationText}
+                  </span>
+                )}
               </div>
-              <div className="mp-song-meta">
-                {track.metaText}
+              <div className="mp-song-info">
+                <h4 className="mp-song-title">
+                  {track.title || 'Untitled'}
+                </h4>
+                <div className="mp-song-artist">
+                  {track.artists && track.artists.length > 0 ? track.artists.map(a => a.name).join(', ') : 'Unknown Artist'}
+                </div>
+                <div className="mp-song-meta">
+                  {track.metaText}
+                </div>
               </div>
             </div>
-          </div>
-        )})}
-      </div>
-      {loading && <div className="mp-loading">Fetching results...</div>}
+          )})}
+        </div>
+      )}
       {isPlayerExpanded && currentTrack && (
-        <div className={`mp-expanded ${isFullscreen ? 'is-fullscreen' : ''}`}>
-          <div className="mp-expanded-bars">
-            {Array.from({ length: isFullscreen ? 120 : 80 }).map((_, index) => {
-              const level = vizLevels[index % vizLevels.length] || 0.05;
-              const levelClass = `lvl-${Math.min(9, Math.max(0, Math.floor(level * 10)))}`;
-              return (
-              <span
-                key={`bg-bar-${index}`}
-                className={`mp-bg-bar ${levelClass}`}
-              />
-            )})}
-          </div>
+        <div className="mp-expanded">
           <div className="mp-expanded-overlay" />
           <div className="mp-expanded-topbar">
             <button
               onClick={() => {
                 capturePlaybackState();
-                if(isFullscreen) setIsFullscreen(false);
-                else setIsPlayerExpanded(false);
+                setIsPlayerExpanded(false);
               }}
               className="fs-control-btn mp-icon-btn"
             >
               <X size={22} />
             </button>
-            <div className="mp-expanded-topbar-actions">
-              <button
-                onClick={() => {
-                  capturePlaybackState();
-                  setIsFullscreen(!isFullscreen);
-                }}
-                className="fs-control-btn mp-icon-btn"
-                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-              >
-                <Maximize2 size={20} />
-              </button>
-            </div>
           </div>
-          <div className={`mp-expanded-content ${isFullscreen ? 'is-fullscreen' : ''}`}>
+          <div className="mp-expanded-content">
             <div className="mp-expanded-cover-wrap">
                <img
                 src={toWsrvImage(currentCoverUrl || getBestThumbnail(currentTrack), 800, 800) || currentCoverUrl || getBestThumbnail(currentTrack) || fallbackCover(currentTrack.title)}
@@ -368,25 +660,19 @@ const MusicPlayer = () => {
                   }
                   e.currentTarget.src = fallbackCover(currentTrack.title);
                 }}
-                className={`mp-expanded-cover ${isFullscreen ? 'is-fullscreen' : ''}`}
+                className="mp-expanded-cover"
               />
             </div>
-            <div className={`mp-expanded-info ${isFullscreen ? 'is-fullscreen' : ''}`}>
-              <h1 className={`mp-expanded-title ${isFullscreen ? 'is-fullscreen' : ''}`}>
+            <div className="mp-expanded-info">
+              <h1 className="mp-expanded-title">
                 {currentTrack.title}
               </h1>
-              <div className={`mp-expanded-meta-row ${isFullscreen ? 'is-fullscreen' : ''}`}>
+              <div className="mp-expanded-meta-row">
                 <span>{currentTrack.artists?.map((artist) => artist.name).join(', ') || 'Unknown Artist'}</span>
                 {(currentTrack.metaText || currentTrack.viewsText) && (
                   <>
                     <span className="mp-dot">•</span>
                     <span>{currentTrack.metaText || currentTrack.viewsText}</span>
-                  </>
-                )}
-                {currentTrack.durationText && (
-                  <>
-                    <span className="mp-dot">•</span>
-                    <span>{currentTrack.durationText}</span>
                   </>
                 )}
               </div>
@@ -408,7 +694,7 @@ const MusicPlayer = () => {
                   />
                    <span className="mp-time-text">{formatTime(duration)}</span>
                 </div>
-                <div className={`mp-expanded-controls ${isFullscreen ? 'is-fullscreen' : ''}`}>
+                <div className="mp-expanded-controls">
                   <button className="fs-control-btn" title="Shuffle"><Shuffle size={20} opacity={0.7} /></button>
                   <button className="fs-control-btn" onClick={() => { if(audioRef.current) audioRef.current.currentTime -= 10; }}><SkipBack size={32} /></button>
                   <button 
@@ -421,186 +707,176 @@ const MusicPlayer = () => {
                     {isPlaying ? <Pause size={36} fill="#000" /> : <Play className="mp-main-play-icon" size={36} fill="#000" />}
                   </button>
                   <button className="fs-control-btn" onClick={() => { if(audioRef.current) audioRef.current.currentTime += 10; }}><SkipForward size={32} /></button>
-                  <button className="fs-control-btn" title="Repeat"><Repeat size={20} opacity={0.7} /></button>
+                  <button
+                    className="fs-control-btn"
+                    title={isRepeatEnabled ? 'Repeat on' : 'Repeat off'}
+                    onClick={() => setIsRepeatEnabled((prev) => !prev)}
+                    aria-pressed={isRepeatEnabled}
+                  >
+                    <Repeat size={20} opacity={isRepeatEnabled ? 1 : 0.7} />
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-          <audio
-              ref={audioRef}
-              key={currentAudioUrl || 'expanded-empty'}
-              src={currentAudioUrl || ''}
-              autoPlay
-              preload="metadata"
-              className="mp-audio-hidden"
-              onLoadedMetadata={() => {
-                if (audioRef.current) {
-                  audioRef.current.muted = false;
-                  audioRef.current.volume = volume;
-                  setDuration(audioRef.current.duration || 0);
-                }
-              }}
-              onPlay={() => {
-                if (audioRef.current) {
-                  setIsPlaying(true);
-                }
-              }}
-              onPause={() => setIsPlaying(false)}
-              onTimeUpdate={() => {
-                if (audioRef.current) setCurrentTime(audioRef.current.currentTime || 0);
-              }}
-              onError={(err) => {
-                console.error('Audio error:', err);
-                setAudioCandidateIndex((prev) => {
-                  const next = prev + 1;
-                  if (next < audioCandidates.length) {
-                    setCurrentAudioUrl(audioCandidates[next]);
-                    return next;
-                  }
-                  return prev;
-                });
-              }}
+          <div className="mp-expanded-bars" style={{
+            position: 'absolute',
+            bottom: '0',
+            left: '0',
+            right: '0',
+            height: '100%',
+            pointerEvents: 'none',
+            zIndex: -1,
+            opacity: 0.7
+          }}>
+            <LiveAudioVisualizer
+              audioElement={audioRef.current}
+              width={1280}
+              height={720}
+              barWidth={11}
+              gap={6}
+              backgroundColor="transparent"
+              barColor="white"
             />
+          </div>
         </div>
       )}
       {currentTrack && !isPlayerExpanded && (
         <div className={`mp-mini-player ${isCompactPlayer ? 'is-compact' : ''}`}>
-        {!isCompactPlayer && <button
-          onClick={() => {
-            if (!audioRef.current) return;
-            audioRef.current.currentTime = Math.max(0, (audioRef.current.currentTime || 0) - 10);
-          }}
-          className="mp-ghost-btn"
-          title="Back 10s"
-        >
-          <SkipBack size={20} />
-        </button>}
-        <button
-          onClick={() => {
-            if (!audioRef.current) return;
-            if (audioRef.current.paused) audioRef.current.play(); else audioRef.current.pause();
-          }}
-          className="mp-ghost-btn"
-          title={isPlaying ? 'Pause' : 'Play'}
-        >
-          {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-        </button>
-        {!isCompactPlayer && <button
-          onClick={() => {
-            if (!audioRef.current) return;
-            audioRef.current.currentTime = Math.min(audioRef.current.duration || 0, (audioRef.current.currentTime || 0) + 10);
-          }}
-          className="mp-ghost-btn"
-          title="Forward 10s"
-        >
-          <SkipForward size={20} />
-        </button>}
-        <div className="mp-mini-time">{formatTime(currentTime)} / {formatTime(duration)}</div>
-        <div className={`mp-mini-track ${isCompactPlayer ? 'is-compact' : ''}`}>
-          <img
-            src={toWsrvImage(currentCoverUrl || getBestThumbnail(currentTrack), 96, 96) || currentCoverUrl || getBestThumbnail(currentTrack) || fallbackCover(currentTrack.title)}
-            data-raw-src={currentCoverUrl || getBestThumbnail(currentTrack) || ''}
-            alt=""
-            onError={(e) => {
-              if (!e.currentTarget.dataset.rawTried && e.currentTarget.dataset.rawSrc) {
-                e.currentTarget.dataset.rawTried = '1';
-                e.currentTarget.src = e.currentTarget.dataset.rawSrc;
-                return;
-              }
-              e.currentTarget.src = fallbackCover(currentTrack.title);
+          <input
+            type="range"
+            min={0}
+            max={duration || 0}
+            step={0.1}
+            value={currentTime}
+            onChange={(e) => {
+              const t = Number(e.target.value);
+              setCurrentTime(t);
+              if (audioRef.current) audioRef.current.currentTime = t;
             }}
-            className="mp-mini-cover"
+            className="mp-mini-progress-range"
           />
-          <div className="mp-mini-track-text">
-            <div className="mp-mini-track-title">{currentTrack.title}</div>
-            <div className="mp-mini-track-artist">
-              {currentTrack.artists?.map(artist => artist.name).join(', ')}
+          <div className="mp-mini-left">
+            <button
+              onClick={() => {
+                if (!audioRef.current) return;
+                audioRef.current.currentTime = Math.max(0, (audioRef.current.currentTime || 0) - 10);
+              }}
+              className="mp-ghost-btn"
+              title="Back 10s"
+            >
+              <SkipBack size={20} />
+            </button>
+            <button
+              onClick={() => {
+                if (!audioRef.current) return;
+                if (audioRef.current.paused) audioRef.current.play(); else audioRef.current.pause();
+              }}
+              className="mp-mini-main-btn"
+              title={isPlaying ? 'Pause' : 'Play'}
+            >
+              {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+            </button>
+            <button
+              onClick={() => {
+                if (!audioRef.current) return;
+                audioRef.current.currentTime = Math.min(audioRef.current.duration || 0, (audioRef.current.currentTime || 0) + 10);
+              }}
+              className="mp-ghost-btn"
+              title="Forward 10s"
+            >
+              <SkipForward size={20} />
+            </button>
+            <div className="mp-mini-time">{formatTime(currentTime)} / {formatTime(duration)}</div>
+          </div>
+
+          <div className="mp-mini-center">
+            <div className={`mp-mini-track ${isCompactPlayer ? 'is-compact' : ''}`}>
+              <img
+                src={toWsrvImage(currentCoverUrl || getBestThumbnail(currentTrack), 96, 96) || currentCoverUrl || getBestThumbnail(currentTrack) || fallbackCover(currentTrack.title)}
+                data-raw-src={currentCoverUrl || getBestThumbnail(currentTrack) || ''}
+                alt=""
+                onError={(e) => {
+                  if (!e.currentTarget.dataset.rawTried && e.currentTarget.dataset.rawSrc) {
+                    e.currentTarget.dataset.rawTried = '1';
+                    e.currentTarget.src = e.currentTarget.dataset.rawSrc;
+                    return;
+                  }
+                  e.currentTarget.src = fallbackCover(currentTrack.title);
+                }}
+                className="mp-mini-cover"
+              />
+              <div className="mp-mini-track-text">
+                <div className="mp-mini-track-title">{currentTrack.title}</div>
+                <div className="mp-mini-track-artist">
+                  {currentTrack.artists?.map(artist => artist.name).join(', ') || 'Unknown Artist'}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <button
-          onClick={() => {
-            capturePlaybackState();
-            setIsPlayerExpanded(true);
-          }}
-          className="mp-open-btn"
-        >
-          <Maximize2 size={15} /> Open Player
-        </button>
-        {!isCompactPlayer && <button className="mp-ghost-btn mp-ghost-muted" title="Shuffle">
-          <Shuffle size={17} />
-        </button>}
-        {!isCompactPlayer && <button className="mp-ghost-btn mp-ghost-muted" title="Repeat">
-          <Repeat size={17} />
-        </button>}
-        <Volume2 size={17} className="mp-volume-icon" />
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={volume}
-          onChange={(e) => {
-            const v = Number(e.target.value);
-            setVolume(v);
-            if (audioRef.current) audioRef.current.volume = v;
-          }}
-          className={`mp-volume-range ${isCompactPlayer ? 'is-compact' : ''}`}
-        />
-        <input
-          type="range"
-          min={0}
-          max={duration || 0}
-          step={0.1}
-          value={currentTime}
-          onChange={(e) => {
-            const t = Number(e.target.value);
-            setCurrentTime(t);
-            if (audioRef.current) audioRef.current.currentTime = t;
-          }}
-          className={`mp-progress-range ${isCompactPlayer ? 'is-compact' : ''}`}
-        />
-        <audio
-          ref={audioRef}
-          key={currentAudioUrl || 'empty'}
-          src={currentAudioUrl || ''}
-          autoPlay
-          preload="metadata"
-          className="mp-audio-hidden"
-          onLoadedMetadata={() => {
-            if (audioRef.current) {
-              audioRef.current.muted = false;
-              audioRef.current.volume = volume;
-              setDuration(audioRef.current.duration || 0);
-            }
-          }}
-          onPlay={() => {
-            if (audioRef.current) {
-              audioRef.current.muted = false;
-              audioRef.current.volume = volume;
-              setIsPlaying(true);
-            }
-          }}
-          onPause={() => setIsPlaying(false)}
-          onTimeUpdate={() => {
-            if (audioRef.current) setCurrentTime(audioRef.current.currentTime || 0);
-          }}
-          onError={(err) => {
-            console.error('Audio error:', err);
-            setAudioCandidateIndex((prev) => {
-              const next = prev + 1;
-              if (next < audioCandidates.length) {
-                setCurrentAudioUrl(audioCandidates[next]);
-                setError(`Trying fallback source ${next + 1}/${audioCandidates.length}...`);
-                return next;
-              }
-              setError('Failed to play this track (all sources failed)');
-              return prev;
-            });
-          }}
-        />
+
+          <div className="mp-mini-right">
+            <button
+              className="mp-ghost-btn mp-ghost-muted"
+              title={isRepeatEnabled ? 'Repeat on' : 'Repeat off'}
+              onClick={() => setIsRepeatEnabled((prev) => !prev)}
+              aria-pressed={isRepeatEnabled}
+            >
+              <Repeat size={17} opacity={isRepeatEnabled ? 1 : 0.7} />
+            </button>
+            <button
+              onClick={() => {
+                capturePlaybackState();
+                setIsPlayerExpanded(true);
+              }}
+              className="mp-open-btn"
+              title="Open player"
+            >
+              <Maximize2 size={15} />
+            </button>
+          </div>
         </div>
       )}
+      <audio
+        ref={audioRef}
+        key={currentAudioUrl || 'player-empty'}
+        src={currentAudioUrl || ''}
+        crossOrigin="anonymous"
+        autoPlay
+        preload="metadata"
+        className="mp-audio-hidden"
+        onLoadedMetadata={() => {
+          if (audioRef.current) {
+            audioRef.current.muted = false;
+            audioRef.current.volume = volume;
+            setDuration(audioRef.current.duration || 0);
+          }
+        }}
+        onPlay={() => {
+          if (audioRef.current) {
+            audioRef.current.muted = false;
+            audioRef.current.volume = volume;
+            setIsPlaying(true);
+          }
+        }}
+        onPause={() => setIsPlaying(false)}
+        onTimeUpdate={() => {
+          if (audioRef.current) setCurrentTime(audioRef.current.currentTime || 0);
+        }}
+        onError={(err) => {
+          console.error('Audio error:', err);
+          setAudioCandidateIndex((prev) => {
+            const next = prev + 1;
+            if (next < audioCandidates.length) {
+              setCurrentAudioUrl(audioCandidates[next]);
+              setError(`Trying fallback source ${next + 1}/${audioCandidates.length}...`);
+              return next;
+            }
+            setError('Failed to play this track (all sources failed)');
+            return prev;
+          });
+        }}
+      />
     </div>
   );
 };
