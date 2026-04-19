@@ -120,48 +120,47 @@ export default function Browser() {
   }, [])
 
   return (
-    <div className="chrome-app" style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#1e1e1e', color: '#ffffff' }}>
-      <div style={{ display: 'flex', alignItems: 'center', padding: '6px 8px', backgroundColor: '#2b2b2b', borderBottom: '1px solid #404040', gap: '4px' }}>
-        <button onClick={handleBack} disabled={currentIndex <= 0} style={{ padding: '4px', margin: 0, background: 'none', border: 'none', cursor: currentIndex > 0 ? 'pointer' : 'not-allowed', color: currentIndex > 0 ? '#e8eaed' : '#5f6368', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+    <div className="chrome-app">
+      <div className="chrome-toolbar">
+        <button onClick={handleBack} disabled={currentIndex <= 0} className="chrome-nav-button">
           <ArrowLeft size={20} />
         </button>
-        <button onClick={handleForward} disabled={currentIndex >= history.length - 1} style={{ padding: '4px', margin: 0, background: 'none', border: 'none', cursor: currentIndex < history.length - 1 ? 'pointer' : 'not-allowed', color: currentIndex < history.length - 1 ? '#e8eaed' : '#5f6368', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+        <button onClick={handleForward} disabled={currentIndex >= history.length - 1} className="chrome-nav-button">
           <ArrowRight size={20} />
         </button>
-        <button onClick={handleReload} disabled={!iframeUrl || loading} style={{ padding: '4px', margin: 0, background: 'none', border: 'none', cursor: (!iframeUrl || loading) ? 'not-allowed' : 'pointer', color: (!iframeUrl || loading) ? '#5f6368' : '#e8eaed', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+        <button onClick={handleReload} disabled={!iframeUrl || loading} className="chrome-nav-button">
           <RotateCw size={20} />
         </button>
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit() }} className="mp-search-form" ref={searchUiRef} style={{ flex: 1, margin: 0, marginLeft: '8px', position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit() }} className="chrome-search-form" ref={searchUiRef}>
           <input
             type="text"
             value={inputUrl}
             onChange={(e) => setInputUrl(e.target.value)}
             onFocus={() => setIsSearchDropdownOpen(true)}
-            style={{ width: '100%', padding: '8px 16px', border: 'none', borderRadius: '24px', outline: 'none', fontSize: '14px', backgroundColor: '#3c3c3c', color: '#e8eaed', height: '34px', boxSizing: 'border-box' }}
+            className="chrome-search-input"
             placeholder="Search typing..."
           />
           {isSearchDropdownOpen && (
-            <div className="mp-search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#2b2b2b', border: '1px solid #404040', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.5)', zIndex: 10, maxHeight: '300px', overflowY: 'auto' }}>
-              <div className="mp-search-head" style={{ padding: '8px 12px', borderBottom: '1px solid #404040', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#ffffff' }}>
+            <div className="chrome-search-dropdown">
+              <div className="chrome-search-head">
                 <span>Recent searches</span>
                 {searchHistory.length > 0 && (
-                  <button type="button" className="mp-search-clear" onClick={clearSearchHistory} style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer' }}>
+                  <button type="button" className="chrome-search-clear" onClick={clearSearchHistory}>
                     Clear
                   </button>
                 )}
               </div>
               {searchHistory.length === 0 && (
-                <div className="mp-search-hint" style={{ padding: '8px 12px', color: '#999999' }}>No search history yet</div>
+                <div className="chrome-search-hint">No search history yet</div>
               )}
               {searchHistory.map((item) => (
                 <button
                   type="button"
                   key={`history-${item}`}
-                  className="mp-search-item"
+                  className="chrome-search-item"
                   onClick={() => handleSearchSuggestion(item)}
-                  style={{ width: '100%', padding: '8px 12px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#ffffff' }}
                 >
-                  <span className="mp-search-item-clock"><Clock3 size={14} color="#ffffff" /></span>
+                  <span className="chrome-search-item-clock"><Clock3 size={14} color="#ffffff" /></span>
                   <span>{item}</span>
                 </button>
               ))}
@@ -169,8 +168,8 @@ export default function Browser() {
           )}
         </form>
       </div>
-      <div className="chrome-content" style={{ flex: 1, position: 'relative', backgroundColor: '#1e1e1e' }}>
-        {loading && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10, color: '#ffffff' }}>Loading...</div>}
+      <div className="chrome-content">
+        {loading && <div className="chrome-loading">Loading...</div>}
         <iframe
           ref={iframeRef}
           src={iframeUrl || undefined}
@@ -179,7 +178,7 @@ export default function Browser() {
           referrerPolicy="no-referrer"
           allow="accelerometer; autoplay; clipboard-read; clipboard-write; encrypted-media; gyroscope; picture-in-picture; display-capture; camera; microphone; fullscreen; storage-access"
           allowFullScreen
-          style={{ width: '100%', height: '100%', border: 'none' }}
+          className="chrome-iframe"
         />
       </div>
     </div>

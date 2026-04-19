@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, lazy } from 'react'
 import StartMenu from './StartMenu'
 import DesktopIcons from './DesktopIcons'
 import Taskbar from './Taskbar'
@@ -6,13 +6,13 @@ import WindowManager from './WindowManager'
 import CalendarPanel from './CalendarPanel'
 import QuickSettings from './QuickSettings'
 import ContextMenu from './ContextMenu'
-import Browser from './apps/Browser'
-import Settings from './apps/Settings'
-import Terminal from './apps/Terminal'
-import VSCode from './apps/VSCode'
-import Doom from './apps/Doom'
-import LibreOffice from './apps/LibreOffice'
-import Minecraft from './apps/Minecraft'
+const Browser = lazy(() => import('./apps/Browser'))
+const Settings = lazy(() => import('./apps/Settings'))
+const Terminal = lazy(() => import('./apps/Terminal'))
+const VSCode = lazy(() => import('./apps/VSCode'))
+const Doom = lazy(() => import('./apps/Doom'))
+const LibreOffice = lazy(() => import('./apps/LibreOffice'))
+const Minecraft = lazy(() => import('./apps/Minecraft'))
 
 const DESKTOP_STATE_KEY = 'win11.desktop.state.v1'
 const APP_CATALOG = [

@@ -4,11 +4,15 @@
     {
       "src": "/api/(.*)",
       "dest": "/api/$1"
+    },
+    {
+      "src": "/woanlew2933/janleil3n/(.*)",
+      "dest": "/woanlew2933/janleil3n/sans-fight/index.html"
     }
   ],
   "rewrites": [
     {
-      "source": "/((?!api/).*)",
+      "source": "/((?!api/|woanlew2933/janleil3n).*)",
       "destination": "/index.html"
     }
   ],

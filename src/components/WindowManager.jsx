@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import { Minus, Square, X, Copy } from 'lucide-react'
 
 function SnapHud({ activeZone }) {
@@ -286,7 +286,11 @@ function Window({ window: win, onClose, onMinimize, onMaximize, onUpdatePos, onU
       </div>
       <div className="window-content">
         {isInteracting && <div className="window-drag-overlay" />}
-        {win.component && <win.component {...(win.appProps || {})} />}
+        {win.component && (
+          <Suspense fallback={<div className="window-loading">Loading...</div>}>
+            <win.component {...(win.appProps || {})} />
+          </Suspense>
+        )}
       </div>
       {!win.maximized && (
         <>

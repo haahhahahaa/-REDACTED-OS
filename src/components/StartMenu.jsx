@@ -1,19 +1,19 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, lazy } from 'react'
 import { useUser } from '../contexts/UserContext'
-import Calculator from './apps/Calculator'
-import Notepad from './apps/Notepad'
-import FileExplorer from './apps/FileExplorer'
-import Settings from './apps/Settings'
-import Browser from './apps/Browser'
-import Todo from './apps/Todo'
-import Paint from './apps/Paint'
-import Terminal from './apps/Terminal'
-import Profile from './apps/Profile'
-import Doom from './apps/Doom'
-import VSCode from './apps/VSCode'
-import LibreOffice from './apps/LibreOffice'
-import Minecraft from './apps/Minecraft'
-import MusicPlayer from './apps/MusicPlayer'
+const Calculator = lazy(() => import('./apps/Calculator'))
+const Notepad = lazy(() => import('./apps/Notepad'))
+const FileExplorer = lazy(() => import('./apps/FileExplorer'))
+const Settings = lazy(() => import('./apps/Settings'))
+const Browser = lazy(() => import('./apps/Browser'))
+const Todo = lazy(() => import('./apps/Todo'))
+const Paint = lazy(() => import('./apps/Paint'))
+const Terminal = lazy(() => import('./apps/Terminal'))
+const Profile = lazy(() => import('./apps/Profile'))
+const Doom = lazy(() => import('./apps/Doom'))
+const VSCode = lazy(() => import('./apps/VSCode'))
+const LibreOffice = lazy(() => import('./apps/LibreOffice'))
+const Minecraft = lazy(() => import('./apps/Minecraft'))
+const MusicPlayer = lazy(() => import('./apps/MusicPlayer'))
 
 const APPS = [
   { id: 'profile', name: 'Profile', icon: '/icons/profile.png', component: Profile },
@@ -29,7 +29,8 @@ const APPS = [
   { id: 'vscode', name: 'VS Code', icon: '/icons/vscode.png', component: VSCode },
   { id: 'libreoffice', name: 'LibreOffice', icon: '/icons/libreoffice.jpg', component: LibreOffice },
   { id: 'minecraft', name: 'Minecraft', icon: '/icons/minecraft.png', component: Minecraft },
-  { id: 'music', name: 'Music', icon: '/icons/music.png', component: MusicPlayer   },
+  { id: 'music', name: 'Music', icon: '/icons/music.png', component: MusicPlayer },
+  { id: 'puzzle', name: 'Puzzle Game', icon: '/icons/music.png' },
 ]
 
 export default function StartMenu({ isOpen, onToggle, onAppClick, onLock }) {

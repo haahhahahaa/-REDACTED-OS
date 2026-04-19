@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
-import Terminal from './apps/Terminal'
-import Browser from './apps/Browser'
-import VSCode from './apps/VSCode'
-import Doom from './apps/Doom'
-import LibreOffice from './apps/LibreOffice'
-import Minecraft from './apps/Minecraft'
+import { useState, useRef, useEffect, lazy } from 'react'
+const Terminal = lazy(() => import('./apps/Terminal'))
+const Browser = lazy(() => import('./apps/Browser'))
+const VSCode = lazy(() => import('./apps/VSCode'))
+const Doom = lazy(() => import('./apps/Doom'))
+const LibreOffice = lazy(() => import('./apps/LibreOffice'))
+const Minecraft = lazy(() => import('./apps/Minecraft'))
 
 const INITIAL_APPS = [
   { id: 'browser', name: 'Chrome', icon: '/icons/chrome.png', component: Browser },

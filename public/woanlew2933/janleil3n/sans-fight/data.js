@@ -1,5 +1,5 @@
 {
-    "project": [null, "BattleScreen", [
+    "project": [null, "MainMenu", [
             [0, false, true, true, true, false, true, true, true, true],
             [1, true, false, false, false, false, false, false, false, false],
             [2, false, false, false, false, false, false, false, false, false],
@@ -1379,7 +1379,7 @@
                                     [0, [0, 32]]
                                 ]],
                                 [48, 26, null, 8939946990053354, false, [
-                                    [7, [2, "RELOAD TO FIGHT BACK"]]
+                                    [7, [2, "PRESS X/SHIFT TO FIGHT BACK"]]
                                 ]]
                             ]
                         ]
@@ -1769,12 +1769,31 @@
                                                 ]]
                                             ]
                                         ],
+                                        [0, null, false, null, 8000724834746328, [
+                                                [-1, 44, null, 0, false, false, false, 9136060492638931, false],
+                                                [26, 45, null, 0, false, false, false, 9228948525108032, false, [
+                                                    [10, 0],
+                                                    [8, 0],
+                                                    [7, [0, 2]]
+                                                ]]
+                                            ],
+                                            [
+                                                [3, 20, null, 2117610159043014, false, [
+                                                    [1, [2, "RunAttack"]],
+                                                    [13, [7, [2, "sans_bonestab1"]]]
+                                                ]],
+                                                [26, 53, null, 2335323764650383, false, [
+                                                    [10, 0],
+                                                    [7, [0, 1]]
+                                                ]]
+                                            ]
+                                        ],
                                         [0, null, false, null, 1681076560839624, [
                                                 [-1, 44, null, 0, false, false, false, 8895318616103296, false],
                                                 [26, 45, null, 0, false, false, false, 7348407784548393, false, [
                                                     [10, 0],
                                                     [8, 0],
-                                                    [7, [0, 2]]
+                                                    [7, [0, 3]]
                                                 ]]
                                             ],
                                             [
@@ -1793,7 +1812,7 @@
                                                 [26, 45, null, 0, false, false, false, 2874376670707494, false, [
                                                     [10, 0],
                                                     [8, 0],
-                                                    [7, [0, 3]]
+                                                    [7, [0, 4]]
                                                 ]]
                                             ],
                                             [
@@ -1812,7 +1831,7 @@
                                                 [26, 45, null, 0, false, false, false, 8707901552330256, false, [
                                                     [10, 0],
                                                     [8, 0],
-                                                    [7, [0, 4]]
+                                                    [7, [0, 5]]
                                                 ]]
                                             ],
                                             [
@@ -1831,7 +1850,7 @@
                                                 [26, 45, null, 0, false, false, false, 2328231806356348, false, [
                                                     [10, 0],
                                                     [8, 0],
-                                                    [7, [0, 5]]
+                                                    [7, [0, 6]]
                                                 ]]
                                             ],
                                             [
@@ -1850,7 +1869,7 @@
                                                 [26, 45, null, 0, false, false, false, 3765598155206209, false, [
                                                     [10, 0],
                                                     [8, 0],
-                                                    [7, [0, 6]]
+                                                    [7, [0, 7]]
                                                 ]]
                                             ],
                                             [
@@ -1869,7 +1888,7 @@
                                                 [26, 45, null, 0, false, false, false, 171132599029675, false, [
                                                     [10, 0],
                                                     [8, 0],
-                                                    [7, [0, 7]]
+                                                    [7, [0, 8]]
                                                 ]]
                                             ],
                                             [
@@ -1888,7 +1907,7 @@
                                                 [26, 45, null, 0, false, false, false, 7503374467817326, false, [
                                                     [10, 0],
                                                     [8, 0],
-                                                    [7, [0, 8]]
+                                                    [7, [0, 9]]
                                                 ]]
                                             ],
                                             [
@@ -1907,7 +1926,7 @@
                                                 [26, 45, null, 0, false, false, false, 1424798773260015, false, [
                                                     [10, 0],
                                                     [8, 0],
-                                                    [7, [0, 9]]
+                                                    [7, [0, 10]]
                                                 ]]
                                             ],
                                             [
@@ -1926,7 +1945,7 @@
                                                 [26, 45, null, 0, false, false, false, 4146204412772374, false, [
                                                     [10, 0],
                                                     [8, 0],
-                                                    [7, [0, 10]]
+                                                    [7, [0, 11]]
                                                 ]]
                                             ],
                                             [
@@ -1945,7 +1964,7 @@
                                                 [26, 45, null, 0, false, false, false, 2372355982566757, false, [
                                                     [10, 0],
                                                     [8, 0],
-                                                    [7, [0, 11]]
+                                                    [7, [0, 12]]
                                                 ]]
                                             ],
                                             [
@@ -1964,7 +1983,7 @@
                                                 [26, 45, null, 0, false, false, false, 8037182718456863, false, [
                                                     [10, 0],
                                                     [8, 0],
-                                                    [7, [0, 12]]
+                                                    [7, [0, 13]]
                                                 ]]
                                             ],
                                             [
@@ -1983,7 +2002,7 @@
                                                 [26, 45, null, 0, false, false, false, 9530962753947138, false, [
                                                     [10, 0],
                                                     [8, 0],
-                                                    [7, [0, 12]]
+                                                    [7, [0, 14]]
                                                 ]]
                                             ],
                                             [
@@ -2004,7 +2023,7 @@
                                         [26, 45, null, 0, false, false, false, 3378806070575378, false, [
                                             [10, 1],
                                             [8, 0],
-                                            [7, [0, 12]]
+                                            [7, [0, 13]]
                                         ]]
                                     ],
                                     [
@@ -2335,7 +2354,7 @@
                                     [
                                         [14, 59, null, 4925109422702469, false, [
                                             [10, 4],
-                                            [7, [2, "* You felt your sins crawling\n  on your back."]]
+                                            [7, [2, "* is bro cooking"]]
                                         ]]
                                     ]
                                 ],
@@ -2354,7 +2373,7 @@
                                     [
                                         [14, 59, null, 5244377573294855, false, [
                                             [10, 4],
-                                            [7, [2, "* You feel like you're going to\n  have a bad time."]]
+                                            [7, [2, "* yeah bro good luck"]]
                                         ]]
                                     ],
                                     [
@@ -2398,7 +2417,7 @@
                                     [
                                         [14, 59, null, 2670032810893258, false, [
                                             [10, 4],
-                                            [7, [2, "* Sans is taking a break."]]
+                                            [7, [2, "* wait what happened"]]
                                         ]]
                                     ]
                                 ],
@@ -2412,7 +2431,7 @@
                                     [
                                         [14, 59, null, 3736070576317147, false, [
                                             [10, 4],
-                                            [7, [2, "* The REAL battle finally begins."]]
+                                            [7, [2, "* ur def getting cooked"]]
                                         ]]
                                     ]
                                 ],
@@ -2420,13 +2439,13 @@
                                         [26, 45, null, 0, false, false, false, 1024124910185591, false, [
                                             [10, 1],
                                             [8, 0],
-                                            [7, [0, 18]]
+                                            [7, [0, 19]]
                                         ]]
                                     ],
                                     [
                                         [14, 59, null, 6589808686267995, false, [
                                             [10, 4],
-                                            [7, [2, "* Reading this doesn't seem\n  like the best use of time."]]
+                                            [7, [2, "* why are you reading this\n  you moron"]]
                                         ]]
                                     ]
                                 ],
@@ -2440,7 +2459,7 @@
                                     [
                                         [14, 59, null, 5769331507923777, false, [
                                             [10, 4],
-                                            [7, [2, "* Sans is starting to look\n  really tired."]]
+                                            [7, [2, "* is sans cooked"]]
                                         ]]
                                     ]
                                 ],
@@ -2448,7 +2467,7 @@
                                         [26, 45, null, 0, false, false, false, 4981641262757057, false, [
                                             [10, 1],
                                             [8, 0],
-                                            [7, [0, 20]]
+                                            [7, [0, 21]]
                                         ]]
                                     ],
                                     [
@@ -2518,12 +2537,12 @@
                                         [26, 45, null, 0, false, false, false, 3911861650604649, false, [
                                             [10, 1],
                                             [8, 1],
-                                            [7, [0, 15]]
+                                            [7, [0, 16]]
                                         ]],
                                         [26, 45, null, 0, false, false, false, 4354504672713893, false, [
                                             [10, 1],
                                             [8, 1],
-                                            [7, [0, 16]]
+                                            [7, [0, 17]]
                                         ]],
                                         [26, 45, null, 0, false, false, false, 3738460067809331, false, [
                                             [10, 1],
@@ -2570,6 +2589,20 @@
                         [3, 20, null, 522788098430892, false, [
                             [1, [2, "SansText"]],
                             [13, [7, [2, "alright, i guess\nyou win."]],
+                                [7, [2, "PinDialogue"]]
+                            ]
+                        ]]
+                    ]
+                ],
+                [0, null, false, null, 1234567890123456, [
+                        [3, 36, null, 2, false, false, false, 1234567890123457, false, [
+                            [1, [2, "PinDialogue"]]
+                        ]]
+                    ],
+                    [
+                        [3, 20, null, 1234567890123458, false, [
+                            [1, [2, "SansText"]],
+                            [13, [7, [2, "the pin is 293021483\n294083"]],
                                 [7, [2, "Win2"]]
                             ]
                         ]]
@@ -10451,7 +10484,7 @@
                                             [0, [0, 32]]
                                         ]],
                                         [48, 26, null, 349859121287884, false, [
-                                            [7, [2, "RELOAD TO FIGHT BACK"]]
+                                            [7, [2, "PRESS X/SHIFT TO FIGHT BACK"]]
                                         ]],
                                         [5, 30, null, 554512315000031, false, [
                                             [2, ["gameover", false]],
@@ -11613,8 +11646,8 @@
                 [1, "PracticeTarget", 0, 60, false, false, 824857649224256, false],
                 [1, "SingleAttack", 1, "", false, false, 9637412728316299, false],
                 [1, "Name", 1, "Chara", false, false, 8522084662131715, false],
-                [1, "HP", 0, 920, false, false, 4067313995094888, false],
-                [1, "MaxHP", 0, 920, false, false, 2742940924955148, false],
+                [1, "HP", 0, 92000, false, false, 4067313995094888, false],
+                [1, "MaxHP", 0, 92000, false, false, 2742940924955148, false],
                 [1, "KR", 0, 0, false, false, 2189987320058474, false],
                 [1, "KR_T", 0, 0, false, false, 8948293770944489, false]
             ]],
@@ -13279,7 +13312,11 @@
                                 [56, 252, null, 0, false, false, false, 6716366940052336, false]
                             ],
                             [
-
+                                [61, 19, null, 4455327624016498, false, [
+                                    [3, 0],
+                                    [7, [2, "sans_bluebone"]],
+                                    [3, 0]
+                                ]],
                                 [61, 19, null, 9396866984468434, false, [
                                     [3, 0],
                                     [7, [2, "sans_bonegap1"]],
@@ -13422,7 +13459,13 @@
                                     [0, [0, 32]]
                                 ]],
                                 [48, 26, null, 866871016798015, false, [
-                                    [7, [2, ""]]
+                                    [7, [10, [10, [10, [2, "LOADING ATTACKS "],
+                                                [23, "FileIndex"]
+                                            ],
+                                            [2, " / "]
+                                        ],
+                                        [20, 61, 42, false, null]
+                                    ]]
                                 ]]
                             ]
                         ],
@@ -13455,7 +13498,13 @@
                                     ],
                                     [
                                         [68, 26, null, 3276516335364258, false, [
-                                            [7, [2, ""]]
+                                            [7, [10, [10, [10, [2, "LOADING ATTACKS "],
+                                                        [23, "FileIndex"]
+                                                    ],
+                                                    [2, " / "]
+                                                ],
+                                                [20, 61, 42, false, null]
+                                            ]]
                                         ]]
                                     ]
                                 ],
@@ -13595,11 +13644,30 @@
                                 ]]
                             ],
                             [
-                                [-1, 21, null, 8042278472254115, false, [
+                                [57, 47, null, 8029955601129796, false],
+                                [50, 37, null, 2667792126594554, false],
+                                [3, 20, null, 7882418674263834, false, [
+                                    [1, [2, "MenuBackAction"]],
+                                    [13, [7, [2, ""]]]
+                                ]],
+                                [-1, 32, null, 5097830643532841, false, [
+                                    [4, 50],
+                                    [5, [0, 0]],
+                                    [0, [0, 0]],
+                                    [0, [0, 32]]
+                                ]],
+                                [50, 74, null, 9572232690273981, false, [
+                                    [0, [0, 640]],
+                                    [0, [0, 32]]
+                                ]],
+                                [50, 75, null, 2377617122476924, false, [
+                                    [0, [0, 2]]
+                                ]],
+                                [-1, 21, null, 8492232440000000, false, [
                                     [11, "SimulatorMode"],
                                     [7, [23, "MODE_NORMAL"]]
                                 ]],
-                                [-1, 66, null, 4695783022175675, false, [
+                                [-1, 66, null, 6921132940000000, false, [
                                     [6, "BattleScreen"]
                                 ]]
                             ]
