@@ -11645,9 +11645,9 @@
                 [1, "EndlessStage", 0, 0, false, false, 1966297049622465, false],
                 [1, "PracticeTarget", 0, 60, false, false, 824857649224256, false],
                 [1, "SingleAttack", 1, "", false, false, 9637412728316299, false],
-                [1, "Name", 1, "Chara", false, false, 8522084662131715, false],
-                [1, "HP", 0, 92000, false, false, 4067313995094888, false],
-                [1, "MaxHP", 0, 92000, false, false, 2742940924955148, false],
+                [1, "Name", 1, "REDACTED", false, false, 8522084662131715, false],
+                [1, "HP", 0, 100, false, false, 4067313995094888, false],
+                [1, "MaxHP", 0, 100, false, false, 2742940924955148, false],
                 [1, "KR", 0, 0, false, false, 2189987320058474, false],
                 [1, "KR_T", 0, 0, false, false, 8948293770944489, false]
             ]],
