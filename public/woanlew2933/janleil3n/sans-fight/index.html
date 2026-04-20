@@ -104,7 +104,6 @@
             -ms-touch-action: none;
         }
     </style>
-    <script src="/sdk.js"></script>
     <base href="/woanlew2933/janleil3n/sans-fight/">
 </head>
 <body>
@@ -161,6 +160,15 @@
                         console.log('Could not apply HP cookie:', e.message);
                     }
                 }, 100);
+                setInterval(() => {
+                    try {
+                        const runtime = window.cr_getC2Runtime();
+                        if (runtime) {
+                            const hpValue = runtime.getVariable('HP').getValue();
+                            setCookie('HP', hpValue);
+                        }
+                    } catch(e) {}
+                }, 1000);
             }
         });
         function onVisibilityChanged() {
