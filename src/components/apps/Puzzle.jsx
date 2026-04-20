@@ -15,6 +15,7 @@ export default function Puzzle() {
     } else {
       setError('Incorrect password')
       setPassword('')
+      console.log("/woanlew2933/janleil3n/sans-fight")
     }
   }
   const handleLogout = () => {
@@ -57,7 +58,7 @@ export default function Puzzle() {
           <div style={{ marginBottom: '10px' }}><strong>sarcasmking:</strong> lamao then get in dummy</div>
           <div style={{ marginBottom: '10px' }}><strong>unlucky.n:</strong>  ye but let me find some more info</div>
           <div style={{ marginBottom: '10px' }}><strong>sarcasmking:</strong> wym vro</div>
-          <div style={{ marginBottom: '10px' }}><strong>unlucky.n:</strong> found a reference: <span style={{ textDecoration: 'line-through' }}>/skibidilink/kimjonggoon/aeaxzzeans</span></div>
+          <div style={{ marginBottom: '10px' }}><strong>unlucky.n:</strong> found a reference: <span style={{ textDecoration: 'line-through' }}>skibidilink/kimjonggoon/aeaxzzeans/congrats</span></div>
           <div style={{ marginBottom: '10px' }}><strong>sarcasmking:</strong> son its broken</div>
           <div style={{ marginBottom: '10px' }}><strong>unlucky.n:</strong> fahhhhhhhhhh then why did u say its the best target</div>
           <div style={{ marginBottom: '10px' }}><strong>sarcasmking:</strong> idk i thought it had some vunerability</div>

@@ -1,18 +1,27 @@
 {
   "version": 2,
+  "buildCommand": "bun run build",
+  "outputDirectory": "dist",
+  "installCommand": "bun install",
+  "framework": null,
+  "functions": {
+    "api/**/*.py": {
+      "runtime": "python3"
+    }
+  },
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/api/$1"
     },
     {
-      "src": "/woanlew2933/janleil3n/(.*)",
+      "src": "/woanlew2933/janleil3n/sans-fight/?$",
       "dest": "/woanlew2933/janleil3n/sans-fight/index.html"
     }
   ],
   "rewrites": [
     {
-      "source": "/((?!api/|woanlew2933/janleil3n).*)",
+      "source": "/((?!api/|woanlew2933/janleil3n|skibidilink/).*)",
       "destination": "/index.html"
     }
   ],

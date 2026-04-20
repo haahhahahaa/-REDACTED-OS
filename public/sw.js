@@ -56,6 +56,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
+  if (request.headers.has('range')) {
+    return
+  }
+  if (url.pathname.includes('/woanlew2933/janleil3n/sans-fight/media/')) {
+    return
+  }
+  
   if (url.pathname.startsWith('/icons/')) {
     event.respondWith(
       fetch(request)

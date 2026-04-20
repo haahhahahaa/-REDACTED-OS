@@ -105,6 +105,7 @@
         }
     </style>
     <script src="/sdk.js"></script>
+    <base href="/woanlew2933/janleil3n/sans-fight/">
 </head>
 <body>
     <div id="fb-root"></div>
@@ -127,8 +128,40 @@
     <script src="jquery-3.4.1.min.js"></script>
     <script src="c2runtime.js"></script>
     <script>
+        function setCookie(name, value, days = 365) {
+            const date = new Date();
+            date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+            document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
+        }
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.indexOf(nameEQ) === 0) return cookie.substring(nameEQ.length);
+            }
+            return null;
+        }
+        function deleteCookie(name) {
+            setCookie(name, "", -1);
+        }
         jQuery(document).ready(function() {
             cr_createRuntime("c2canvas");
+            if (window.cr_getC2Runtime) {
+                setTimeout(() => {
+                    try {
+                        const runtime = window.cr_getC2Runtime();
+                        const hpCookie = getCookie('HP');
+                        if (hpCookie !== null) {
+                            const hpValue = parseFloat(hpCookie);
+                            runtime.getVariable('HP').setValue(hpValue);
+                            console.log(`Applied HP from cookie: ${hpValue}`);
+                        }
+                    } catch(e) {
+                        console.log('Could not apply HP cookie:', e.message);
+                    }
+                }, 100);
+            }
         });
         function onVisibilityChanged() {
             if (document.hidden || document.mozHidden || document.webkitHidden || document.msHidden)
@@ -144,6 +177,7 @@
             console.warn("Failed to register service worker: ", e);
         };
         window.C2_RegisterSW = function C2_RegisterSW() {
+            return;
             if (!navigator.serviceWorker)
                 return;
             try {
