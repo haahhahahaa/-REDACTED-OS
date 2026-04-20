@@ -19,7 +19,7 @@ export default function UnlockOverlay({ onUnlock, onCancel }) {
       alert('Please check the .txt files in the Documents folder in File Explorer for some important information.')
       setTimeout(onUnlock, 400)
     } else {
-      setError('The PIN is incorrect. Hint: Logs.')
+      setError('The PIN is incorrect. Hint: 6776')
       console.log('6776 idiot 😂🫵')
     }
   }
